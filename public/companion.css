@@ -25,7 +25,6 @@
 .tc-hub .grid{gap:18px}
 .tc-hub .tool-art{height:138px;width:calc(100% + 44px);margin:-22px -22px 18px;object-fit:cover;border-radius:14px 14px 0 0;display:block}
 .tc-hub .card{overflow:hidden}
-.tc-hub .tool-art.education-art{object-fit:contain;background:#160d25}
 .tc-hub .section-head h2{font-size:23px}
 .tc-armoury .topbar{position:static;background:transparent;border:0}
 .tc-armoury .topbar .wrap{padding-top:16px}
