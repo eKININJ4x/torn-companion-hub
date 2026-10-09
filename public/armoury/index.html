@@ -71,15 +71,15 @@
       #pager{padding:12px!important}.table-head{padding:15px 16px}
     }
   </style>
-<script src="/shared-api.js" defer></script></head>
-<body><div class="tc-hub-navigation" style="position:relative;z-index:100;padding:10px 16px;background:#090d17;border-bottom:1px solid #27344a"><a href="/" style="display:inline-flex;align-items:center;gap:8px;color:#eef2ff;text-decoration:none;font:700 14px system-ui;padding:8px 12px;border:1px solid #7c3aed;border-radius:8px">← Back to Hub</a><span id="tcSharedKeyNotice" style="display:block;margin-top:8px;color:#b9c4d5;font:13px system-ui" role="status"></span><a href="/#api-settings" style="display:inline-block;margin-top:6px;color:#d8b4fe;font:700 13px system-ui">Manage shared API key</a></div>
+<script src="/shared-api.js" defer></script><link rel="stylesheet" href="/companion.css"></head>
+<body class="tc-page tc-armoury"><div class="tc-navbar"><div class="tc-nav-top"><a class="tc-nav-brand" href="/"><span class="tc-nav-mark">TC</span><span>Torn Companion</span></a><nav class="tc-mainnav" aria-label="Torn Companion tools"><a href="/">Hub</a><a href="/education/">Education</a><a href="/armoury/" aria-current="page">Armoury</a><a href="/payouts/">War Payouts</a><a href="/#install">TC OC</a></nav></div><div class="tc-keybar"><span id="tcSharedKeyNotice" role="status"></span><a href="/#api-settings">Manage shared API key</a></div></div>
   <header class="topbar"><div class="wrap"><div class="brand"><div class="mark"></div><div>Torn Companion<small>Faction Armory</small></div></div><div class="status"><span class="dot"></span><span id="connectionText">Not connected</span></div><select id="themeSelect" aria-label="Theme" style="margin-left:10px;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:7px 9px"><option value="system">System</option><option value="dark">Dark</option><option value="light">Light</option></select></div></header>
 
   <main class="wrap">
-    <section class="hero"><div class="eyebrow">Faction Armory Tracker</div><h1>Faction Armory</h1><p>A cleaner way to explore faction armory allocations by member or item. Connect a Torn API key to load your faction inventory and see armory allocations by member or item.</p></section>
+    <section class="hero tc-hero" style="--tc-art:url('/assets/armoury-banner.webp')"><div class="eyebrow">Faction Armory Tracker</div><h1>Faction Armory</h1><p>A cleaner way to explore faction armory allocations by member or item. Connect a Torn API key to load your faction inventory and see armory allocations by member or item.</p></section>
 
     <section class="card connect">
-      <div class="connect-head"><div><h2>Connect to Torn</h2><div class="sub">Enter a Torn API key with Limited faction access. Your key is used directly with Torn's API and is not stored by this page.</div></div><span class="pill">Live Build 0.6.6</span></div>
+      <div class="connect-head"><div><h2>Connect to Torn</h2><div class="sub">Enter a Torn API key with Limited faction access. Your shared hub key is used directly with Torn's API.</div></div><span class="pill">Live Build 0.6.6</span></div>
       <div class="keyrow"><input id="apiKey" type="password" autocomplete="off" placeholder="Enter Torn API key"><button class="btn" id="connectBtn">Connect</button></div>
       <div class="sub" id="message" style="margin-top:10px">Requires a <strong>Limited-access</strong> Torn API key. <a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener" style="color:#b47cff;font-weight:800">Get / manage your Torn API key ↗</a></div>
     </section>

@@ -124,25 +124,14 @@
       .card{min-height:auto}
     }
   </style>
-<script src="/shared-api.js" defer></script></head>
-<body>
-  <header>
-    <div class="shell">
-      <nav>
-        <a class="brand" href="#"><span class="mark">TC</span><span>Torn Companion</span></a>
-        <div class="navlinks">
-          <a href="#tools">Tools</a><a href="#api-settings">API key</a>
-          <a href="#install">Install TC OC</a>
-          <a href="https://github.com/eKININJ4x" target="_blank" rel="noreferrer">GitHub</a>
-        </div>
-      </nav>
-    </div>
-  </header>
+<script src="/shared-api.js" defer></script><link rel="stylesheet" href="/companion.css"></head>
+<body class="tc-page tc-hub" data-page="hub">
+<header><div class="tc-navbar"><div class="tc-nav-top"><a class="tc-nav-brand" href="/"><span class="tc-nav-mark">TC</span><span>Torn Companion</span></a><nav class="tc-mainnav" aria-label="Torn Companion tools"><a href="/" aria-current="page">Hub</a><a href="/education/">Education</a><a href="/armoury/">Armoury</a><a href="/payouts/">War Payouts</a><a href="/#install">TC OC</a></nav></div></div></header>
 
   <main>
-    <div class="shell hero">
+    <div class="shell hero tc-hero" style="--tc-art:url('/assets/hub-banner.webp')">
       <span class="eyebrow">Community tools for Torn City</span>
-      <h1>One home for<br>Torn Companion.</h1>
+      <h1>Your companion.<br>Every step of Torn.</h1>
       <p>Useful faction and player tools with a consistent interface, mobile support and simple public access.</p>
       <div class="hero-actions">
         <a class="btn primary" href="#tools">Explore tools</a>
@@ -162,7 +151,8 @@
 
         <div class="grid">
           <article class="card" id="install">
-            <div class="card-top">
+            <img class="tool-art" src="/assets/hub-banner.webp" alt="" loading="lazy" decoding="async" width="1200" height="400">
+<div class="card-top">
               <div class="icon">🧰</div>
               <span class="status"><span class="dot"></span>Live</span>
             </div>
@@ -181,7 +171,8 @@
           </article>
 
           <article class="card">
-            <div class="card-top">
+            <img class="tool-art education-art" src="/assets/education-banner.webp" alt="" loading="lazy" decoding="async" width="1200" height="400">
+<div class="card-top">
               <div class="icon">🎓</div>
               <span class="status"><span class="dot"></span>Live</span>
             </div>
@@ -201,7 +192,8 @@
           </article>
 
           <article class="card">
-            <div class="card-top">
+            <img class="tool-art" src="/assets/armoury-banner.webp" alt="" loading="lazy" decoding="async" width="1200" height="400">
+<div class="card-top">
               <div class="icon">🧱</div>
               <span class="status"><span class="dot"></span>Live</span>
             </div>
@@ -220,7 +212,8 @@
           </article>
 
           <article class="card">
-            <div class="card-top">
+            <img class="tool-art" src="/assets/payouts-banner.webp" alt="" loading="lazy" decoding="async" width="1200" height="400">
+<div class="card-top">
               <div class="icon">⚔️</div>
               <span class="status"><span class="dot"></span>Live</span>
             </div>
