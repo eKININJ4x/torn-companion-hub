@@ -124,14 +124,14 @@
       .card{min-height:auto}
     }
   </style>
-</head>
+<script src="/shared-api.js" defer></script></head>
 <body>
   <header>
     <div class="shell">
       <nav>
         <a class="brand" href="#"><span class="mark">TC</span><span>Torn Companion</span></a>
         <div class="navlinks">
-          <a href="#tools">Tools</a>
+          <a href="#tools">Tools</a><a href="#api-settings">API key</a>
           <a href="#install">Install TC OC</a>
           <a href="https://github.com/eKININJ4x" target="_blank" rel="noreferrer">GitHub</a>
         </div>
@@ -150,6 +150,7 @@
       </div>
     </div>
 
+<section id="api-settings" style="padding:20px 0"><div class="shell"><article class="card" style="min-height:auto"><h2 style="margin-top:0">One API key for Torn Companion</h2><p>Save your key here to use Education, Armoury and War Payouts. Your key is sent directly to Torn for API requests. Each tool checks its required permissions when loading; private faction data also depends on your faction role.</p><form id="tcKeyForm"><label for="tcKey" style="display:block;margin-bottom:8px;font-weight:700">Torn API key</label><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="tcKey" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your Torn API key" style="flex:1;min-width:180px;padding:12px;background:#0b1220;color:#eef2ff;border:1px solid #53647e;border-radius:8px"><button class="btn" type="button" id="tcShow">Show</button></div><label style="display:flex;align-items:center;gap:8px;margin:14px 0"><input type="checkbox" id="tcRemember">Remember in this browser</label><p style="font-size:13px">By default, the key is saved for this tab session. Remember keeps it available after closing your browser and across tabs. Use Clear key to remove it.</p><div class="card-actions"><button type="submit" class="btn primary" id="tcSave">Validate &amp; save key</button><button type="button" class="btn" id="tcClear">Clear key</button><a class="btn" href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener noreferrer">Get / manage a Torn key</a></div><p id="tcKeyState" role="status" aria-live="polite" style="margin:14px 0 0">No shared API key saved.</p></form></article></div></section>
     <section id="tools">
       <div class="shell">
         <div class="section-head">
@@ -257,3 +258,4 @@
   </footer>
 </body>
 </html>
+

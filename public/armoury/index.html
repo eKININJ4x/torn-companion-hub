@@ -71,8 +71,8 @@
       #pager{padding:12px!important}.table-head{padding:15px 16px}
     }
   </style>
-</head>
-<body><div class="tc-hub-navigation" style="position:relative;z-index:100;padding:10px 16px;background:#090d17;border-bottom:1px solid #27344a"><a href="/" style="display:inline-flex;align-items:center;gap:8px;color:#eef2ff;text-decoration:none;font:700 14px system-ui;padding:8px 12px;border:1px solid #7c3aed;border-radius:8px">← Back to Hub</a></div>
+<script src="/shared-api.js" defer></script></head>
+<body><div class="tc-hub-navigation" style="position:relative;z-index:100;padding:10px 16px;background:#090d17;border-bottom:1px solid #27344a"><a href="/" style="display:inline-flex;align-items:center;gap:8px;color:#eef2ff;text-decoration:none;font:700 14px system-ui;padding:8px 12px;border:1px solid #7c3aed;border-radius:8px">← Back to Hub</a><span id="tcSharedKeyNotice" style="display:block;margin-top:8px;color:#b9c4d5;font:13px system-ui" role="status"></span><a href="/#api-settings" style="display:inline-block;margin-top:6px;color:#d8b4fe;font:700 13px system-ui">Manage shared API key</a></div>
   <header class="topbar"><div class="wrap"><div class="brand"><div class="mark"></div><div>Torn Companion<small>Faction Armory</small></div></div><div class="status"><span class="dot"></span><span id="connectionText">Not connected</span></div><select id="themeSelect" aria-label="Theme" style="margin-left:10px;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:7px 9px"><option value="system">System</option><option value="dark">Dark</option><option value="light">Light</option></select></div></header>
 
   <main class="wrap">
@@ -114,14 +114,10 @@
 
     function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
     function apiError(data,status){
-      const e=data?.error;
-      const code=Number(e?.code);
-      if(code===7)return 'Faction API access required. Your Torn faction role does not currently have permission to view this faction\'s private API data. Ask your faction leadership to enable Faction API Access for your role, then try again.';
-      if(code===16)return 'This API key does not have a high enough access level for the requested faction data. Create or use a key with the required access and try again.';
-      return e?.error || e?.message || (typeof e==='string'?e:null) || (status===403?'This API key does not have the required faction inventory access.':null) || 'Torn API request failed.';
+      return window.TCAuth.errorMessage(data,status);
     }
     async function torn(path,key){
-      const r=await fetch('https://api.torn.com/v2/'+path,{headers:{Authorization:'ApiKey '+key,Accept:'application/json'}});
+      const r=await window.TCAuth.request('https://api.torn.com/v2/'+path,{headers:{Authorization:'ApiKey '+key,Accept:'application/json'}});
       let d={}; try{d=await r.json()}catch{}
       if(!r.ok||d.error) throw new Error(apiError(d,r.status));
       return d;
@@ -151,7 +147,7 @@
       const seen=new Set();activity=all.map(activityRow).filter(x=>{const k=x.id||x.timestamp+'|'+x.text;if(seen.has(k))return false;seen.add(k);return true}).sort((a,b)=>b.timestamp-a.timestamp);
     }
     async function connect(){
-      const key=apiKey.value.trim();
+      const key=window.TCAuth.getKey() || apiKey.value.trim();
       if(!key){message.textContent='Enter an API key first.';return}
       const btn=$('connectBtn'); btn.disabled=true; btn.textContent='Connecting…';
       message.textContent='Validating key and loading the complete faction inventory…'; connectionText.textContent='Connecting…';
@@ -199,7 +195,7 @@
     }
     async function ensureActivity(){
       if(activityLoaded||activityLoading)return;
-      const key=apiKey.value.trim();
+      const key=window.TCAuth.getKey() || apiKey.value.trim();
       if(!key){message.textContent='Connect to Torn before loading Recent Activity.';return}
       activityLoading=true;
       const sub=document.querySelector('.table-head .sub');
@@ -240,6 +236,7 @@
       $('pageNumber').textContent='Page '+currentPage+' of '+pages;
       $('prevPage').disabled=currentPage<=1; $('nextPage').disabled=currentPage>=pages;
     }
+    window.addEventListener('tc-api-change',()=>{apiKey.value='';records=[];activity=[];activityLoaded=false;currentPage=1;render();connectionText.textContent='Not connected';message.textContent='Shared API key changed. Press Connect to load faction inventory.';});
     $('connectBtn').addEventListener('click',connect);
     apiKey.addEventListener('keydown',e=>{if(e.key==='Enter')connect()});
     search.addEventListener('input',()=>{currentPage=1;render()});
@@ -256,3 +253,4 @@
   </script>
 </body>
 </html>
+

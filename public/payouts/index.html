@@ -135,8 +135,8 @@ html[data-theme="light"] .badge{color:#6d28d9;background:#f3e8ff;border-color:#d
 @media(max-width:760px){.score-row{grid-template-columns:1fr auto}.score-track{grid-column:1/3}.score-value{grid-column:2/3;grid-row:1}.brand-divider{display:none}.brand-tool{width:100%}}
 
 </style>
-</head>
-<body><div class="tc-hub-navigation" style="position:relative;z-index:100;padding:10px 16px;background:#090d17;border-bottom:1px solid #27344a"><a href="/" style="display:inline-flex;align-items:center;gap:8px;color:#eef2ff;text-decoration:none;font:700 14px system-ui;padding:8px 12px;border:1px solid #7c3aed;border-radius:8px">← Back to Hub</a></div><div class="theme-control"><label for="themeSelect">Theme</label><select id="themeSelect" onchange="setTheme(this.value)"><option value="system">System</option><option value="dark">Dark</option><option value="light">Light</option></select></div>
+<script src="/shared-api.js" defer></script></head>
+<body><div class="tc-hub-navigation" style="position:relative;z-index:100;padding:10px 16px;background:#090d17;border-bottom:1px solid #27344a"><a href="/" style="display:inline-flex;align-items:center;gap:8px;color:#eef2ff;text-decoration:none;font:700 14px system-ui;padding:8px 12px;border:1px solid #7c3aed;border-radius:8px">← Back to Hub</a><span id="tcSharedKeyNotice" style="display:block;margin-top:8px;color:#b9c4d5;font:13px system-ui" role="status"></span><a href="/#api-settings" style="display:inline-block;margin-top:6px;color:#d8b4fe;font:700 13px system-ui">Manage shared API key</a></div><div class="theme-control"><label for="themeSelect">Theme</label><select id="themeSelect" onchange="setTheme(this.value)"><option value="system">System</option><option value="dark">Dark</option><option value="light">Light</option></select></div>
 <main class="wrap">
 <header>
 <div class="brand-lockup"><span class="tc-mark">TC</span><span class="brand-name">Torn Companion</span><span class="brand-divider">/</span><span class="brand-tool">War Payouts</span></div>
@@ -153,7 +153,7 @@ html[data-theme="light"] .badge{color:#6d28d9;background:#f3e8ff;border-color:#d
 </div>
 <div class="actions"><button type="button" onclick="loadWarFromAPI()">Load War From Torn</button><button class="secondary" type="button" onclick="findFactionWars()">Find Faction Wars</button><button class="secondary" type="button" onclick="toggleKey()">Show / Hide Key</button>
 <a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;border-radius:9px;border:1px solid var(--border);background:var(--panel2);color:var(--text);text-decoration:none;font-weight:700">Open Torn API Page</a></div>
-<div class="api-note">Your key is used only for requests to Torn's API. This page does not save it to localStorage or include it in exported payout files.</div>
+<div class="api-note">Your key is used only for requests to Torn's API. The shared key stays in your browser for this tab session unless you choose Remember on the hub. It is never included in exported payout files.</div>
 <p class="muted" style="font-size:.85rem"><strong>API key:</strong> Open Torn’s API page using the button above and use a <strong>Limited Access</strong> API key. Do not use a Full Access key.</p><div id="factionDetected" class="war-summary" style="display:none;margin-bottom:12px"><div class="label">Faction detected</div><div class="value" id="factionDetectedName">—</div></div>
 <div id="warBrowser" class="war-browser" style="display:none"><div class="war-browser-head"><strong>Recent Faction Ranked Wars</strong><button id="warBrowserToggle" class="secondary war-browser-toggle" type="button" onclick="toggleWarBrowser()" title="Collapse or expand war list" aria-label="Collapse or expand war list" aria-expanded="true">▼</button></div><div id="warList" class="war-list"></div><div id="warBrowserNote" class="muted" style="font-size:.82rem;margin-top:8px"></div></div>
 <div id="apiStatus" class="api-status muted">API mode ready.</div>
@@ -417,7 +417,7 @@ function updateRewardTotal(writePrize=true){
   return total;
 }
 async function refreshRewardPrices(){
-  const key=(document.getElementById('apiKey').value||lastApiKey).trim();
+  const key=window.TCAuth.getKey() || (document.getElementById('apiKey').value||lastApiKey).trim();
   if(!key){alert('Enter your Torn API key first.');return;}
   if(!rewards.length){alert('There are no reward items to price yet.');return;}
   const note=document.getElementById('rewardNote');
@@ -455,13 +455,10 @@ function toggleKey(){
 
 async function tornFetch(path,key){
   const url='https://api.torn.com/v2'+path;
-  const response=await fetch(url,{headers:{'Authorization':'ApiKey '+key,'Accept':'application/json'}});
+  const response=await window.TCAuth.request(url,{headers:{'Authorization':'ApiKey '+key,'Accept':'application/json'}});
   let data=null;
   try{ data=await response.json(); }catch(e){}
-  if(!response.ok){
-    const msg=data?.error?.error || data?.error?.message || data?.error || ('HTTP '+response.status);
-    throw new Error(typeof msg==='string'?msg:JSON.stringify(msg));
-  }
+  if(!response.ok || data?.error) throw new Error(window.TCAuth.errorMessage(data,response.status));
   return data;
 }
 
@@ -562,7 +559,7 @@ function renderScoreGraph(ourFaction,opponent,war){
 
 function warTime(w){return Number(w?.end||w?.start||w?.timestamp||0);}
 async function findFactionWars(){
- const key=document.getElementById('apiKey').value.trim(),status=document.getElementById('apiStatus');
+ const key=window.TCAuth.getKey() || document.getElementById('apiKey').value.trim(),status=document.getElementById('apiStatus');
  if(!key){status.textContent='Enter your Limited Access Torn API key first.';status.className='api-status warn';return;}
  try{
   status.textContent='Detecting your faction…';status.className='api-status';
@@ -591,7 +588,7 @@ function saveWarHistory(){
 }
 
 async function loadWarFromAPI(){
-  const key=document.getElementById('apiKey').value.trim();
+  const key=window.TCAuth.getKey() || document.getElementById('apiKey').value.trim();
   const warEl=document.getElementById('apiWarId');
   if(!numbersOnly(warEl,'Ranked War ID',false)) return;
   const warId=Number(warEl.value);
@@ -818,5 +815,5 @@ attachNumberValidation();
 clearAll();
 loadCutPreference();
 </script>
-</body>
+<script>window.addEventListener('tc-api-change',()=>{lastApiKey='';document.getElementById('apiKey').value='';const status=document.getElementById('apiStatus');status.textContent='Shared API key changed. Reload API data before using it.';status.className='api-status warn';});</script></body>
 </html>
