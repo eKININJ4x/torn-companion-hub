@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="description" content="Torn Companion Ranked War payout calculator for Torn City factions.">
+<title>Torn Companion • Ranked War Payouts</title>
+<style>
+:root{--bg:#090d17;--panel:#111827;--panel2:#0f172a;--text:#eef2ff;--muted:#9aa6bb;--accent:#7c3aed;--accent2:#a855f7;--good:#55d187;--warn:#ffcc66;--border:#27344a}
+*{box-sizing:border-box} body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at 18% -10%,rgba(124,58,237,.25),transparent 34rem),radial-gradient(circle at 100% 0,rgba(168,85,247,.12),transparent 26rem),var(--bg);color:var(--text)}
+.wrap{width:min(1120px,92%);margin:auto;padding:42px 0 70px} header{text-align:center;margin-bottom:30px}
+h1{margin:0 0 8px;font-size:clamp(1.8rem,5vw,3rem)} h2{margin-top:0} .subtitle,.muted{color:var(--muted)}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px} label{display:block;color:var(--muted);font-size:.9rem;margin-bottom:7px}
+input{width:100%;padding:12px 13px;border-radius:9px;border:1px solid var(--border);background:var(--panel2);color:var(--text);font-size:1rem}
+input[type=number]{appearance:textfield;-moz-appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.invalid{border-color:#ff6b6b!important;box-shadow:0 0 0 2px rgba(255,107,107,.12)}
+.reward-grid{display:grid;grid-template-columns:2fr .7fr 1fr 1fr 1fr auto;gap:10px;align-items:end}
+.reward-grid .head{color:var(--muted);font-size:.8rem;font-weight:700}
+.reward-total{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+.smallbtn{padding:10px 12px}
+.paid-row{background:rgba(85,209,135,.10)}
+.paid-row td{color:var(--good)}
+.paid-check{width:22px;height:22px;accent-color:#55d187;cursor:pointer}
+.payment-summary{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;padding:12px 14px;background:var(--panel2);border:1px solid var(--border);border-radius:10px}
+.payment-summary strong{color:var(--good)}
+.war-browser{margin-top:14px;padding:14px;background:var(--panel2);border:1px solid var(--border);border-radius:10px}.war-browser select{width:100%;margin-top:8px}.war-summary{display:none;margin-top:14px;padding:14px;background:var(--panel2);border:1px solid var(--border);border-radius:10px}
+.war-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.war-summary .label{font-size:.78rem;color:var(--muted);margin-bottom:4px}
+.war-summary .value{font-weight:800}
+.progress-wrap{margin-top:12px}
+.progress-track{height:10px;background:#0b1118;border:1px solid var(--border);border-radius:999px;overflow:hidden}
+.progress-bar{height:100%;width:0%;background:var(--good);transition:width .2s ease}
+@media(max-width:750px){.war-summary-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){.reward-grid{grid-template-columns:1fr 1fr}.reward-grid .head{display:none}.reward-grid .wide{grid-column:1/-1}}
+button{border:0;border-radius:9px;padding:12px 18px;background:linear-gradient(180deg,var(--accent2),var(--accent));color:#fff;font-weight:800;cursor:pointer;box-shadow:0 7px 20px rgba(124,58,237,.18)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px} .secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border)}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px} .stat{background:var(--panel2);border-radius:12px;padding:16px;border:1px solid var(--border)}
+.stat span{display:block;color:var(--muted);font-size:.82rem} .stat strong{display:block;margin-top:5px;font-size:1.15rem}
+.good{color:var(--good)} .warn{color:var(--warn)} .table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin-top:10px} th,td{padding:12px 10px;border-bottom:1px solid var(--border);text-align:left}
+th{color:var(--muted);font-size:.85rem} td.num,th.num{text-align:right} tfoot td{font-weight:800;border-top:2px solid var(--border)}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:var(--panel2);border:1px solid var(--border);font-size:.8rem;color:var(--muted)} .api-note{font-size:.85rem;color:var(--muted);margin-top:8px}.api-status{margin-top:12px;font-weight:700}
+footer{text-align:center;color:var(--muted);font-size:.82rem;margin-top:30px}
+@media(max-width:760px){.grid,.summary{grid-template-columns:1fr} th:nth-child(2),td:nth-child(2){display:none}}
+@media print{
+body{background:#fff;color:#000}.container{max-width:none}.card{border:1px solid #bbb;background:#fff;box-shadow:none}
+header,.api-card,#apiSection,.actions button,.actions a,.paid-check,.progress-wrap{display:none!important}
+table,th,td{color:#000!important;background:#fff!important;border-color:#bbb!important}
+.muted{color:#555!important}
+}
+
+html[data-theme="dark"]{color-scheme:dark}
+html[data-theme="light"]{color-scheme:light}
+html[data-theme="light"] body{background:#f3f6fa;color:#17202b}
+html[data-theme="light"] .card,html[data-theme="light"] .war-browser,html[data-theme="light"] .war-summary,html[data-theme="light"] .payment-summary{background:#fff;border-color:#d5dde7;color:#17202b}
+html[data-theme="light"] input,html[data-theme="light"] select,html[data-theme="light"] textarea{background:#fff!important;color:#17202b!important;border-color:#cbd5e1!important}
+html[data-theme="light"] .muted,html[data-theme="light"] label{color:#5d6b7a}
+html[data-theme="light"] th,html[data-theme="light"] td{border-color:#d5dde7}
+html[data-theme="light"] .secondary{background:#eef3f8;color:#17202b;border-color:#cbd5e1}
+html[data-theme="light"] .paid-row{background:rgba(20,122,69,.09)}
+.theme-control{position:fixed;top:14px;right:18px;z-index:50;display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--panel);border:1px solid var(--border);border-radius:10px}
+.theme-control label{margin:0;font-size:.78rem}.theme-control select{width:auto;min-width:92px;padding:7px}
+.war-list{margin-top:10px;display:grid;gap:8px;max-height:430px;overflow:auto}
+.war-item{display:grid;grid-template-columns:90px minmax(160px,1fr) 115px 64px 110px 74px;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--panel)}
+.war-item .wid,.war-item .opp{font-weight:800}.war-item .date{color:var(--muted);font-size:.86rem}
+.status-pill{padding:4px 8px;border-radius:999px;border:1px solid var(--border);font-size:.76rem;font-weight:800;text-align:center}
+.status-paid{color:var(--good)}.status-part{color:var(--warn)}.status-new{color:var(--muted)}.war-load{padding:7px 10px;font-size:.82rem}
+@media(max-width:760px){.theme-control{position:static;margin:10px auto 18px;width:max-content}.war-item{grid-template-columns:78px 1fr 68px}.war-item .date{grid-column:1/2}.war-item .status-pill{grid-column:2/3}.war-item .war-load{grid-column:3/4;grid-row:1/3}}
+@media(prefers-color-scheme:light){
+html[data-theme="system"] body{background:#f3f6fa;color:#17202b}
+html[data-theme="system"] .card,html[data-theme="system"] .war-browser,html[data-theme="system"] .war-summary,html[data-theme="system"] .payment-summary{background:#fff;border-color:#d5dde7;color:#17202b}
+html[data-theme="system"] input,html[data-theme="system"] select{background:#fff!important;color:#17202b!important;border-color:#cbd5e1!important}
+html[data-theme="system"] .muted,html[data-theme="system"] label{color:#5d6b7a}
+html[data-theme="system"] .secondary{background:#eef3f8;color:#17202b;border-color:#cbd5e1}
+}
+
+
+html[data-theme="dark"] .theme-control{background:#121c28;border-color:#2a3a4c;color:#f3f7fb}
+html[data-theme="dark"] .theme-control label{color:#9db3c9}
+html[data-theme="dark"] .theme-control select{background:#172332!important;color:#f3f7fb!important;border-color:#2a3a4c!important;color-scheme:dark}
+html[data-theme="light"] .theme-control{background:#ffffff;border-color:#d5dde7;color:#17202b}
+html[data-theme="light"] .theme-control label{color:#5d6b7a}
+html[data-theme="light"] .theme-control select{background:#ffffff!important;color:#17202b!important;border-color:#cbd5e1!important;color-scheme:light}
+@media(prefers-color-scheme:dark){
+ html[data-theme="system"] .theme-control{background:#121c28;border-color:#2a3a4c;color:#f3f7fb}
+ html[data-theme="system"] .theme-control label{color:#9db3c9}
+ html[data-theme="system"] .theme-control select{background:#172332!important;color:#f3f7fb!important;border-color:#2a3a4c!important;color-scheme:dark}
+}
+@media(prefers-color-scheme:light){
+ html[data-theme="system"] .theme-control{background:#ffffff;border-color:#d5dde7;color:#17202b}
+ html[data-theme="system"] .theme-control label{color:#5d6b7a}
+ html[data-theme="system"] .theme-control select{background:#ffffff!important;color:#17202b!important;border-color:#cbd5e1!important;color-scheme:light}
+}
+
+
+.war-browser-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.war-browser-toggle{width:38px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1.05rem;line-height:1;transition:transform .2s ease}
+.war-browser.collapsed .war-browser-toggle{transform:rotate(-90deg)}
+.war-browser.collapsed .war-list,.war-browser.collapsed #warBrowserNote{display:none}
+
+
+.outcome-pill{padding:4px 9px;border-radius:999px;border:1px solid var(--border);font-size:.76rem;font-weight:900;text-align:center}
+.outcome-win{color:var(--good);border-color:rgba(44,196,120,.45);background:rgba(44,196,120,.08)}
+.outcome-loss{color:#ff7b7b;border-color:rgba(255,123,123,.45);background:rgba(255,123,123,.08)}
+.outcome-draw{color:var(--warn)}
+.score-card{display:none;margin-top:14px;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--panel)}
+.score-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.score-title{font-weight:900;font-size:1.02rem}
+.score-winner{font-weight:900}
+.score-bars{display:grid;gap:14px}
+.score-row{display:grid;grid-template-columns:minmax(120px,1fr) 3fr auto;gap:12px;align-items:center}
+.score-name{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.score-track{height:24px;border-radius:999px;background:var(--panel2);overflow:hidden;border:1px solid var(--border)}
+.score-fill{height:100%;min-width:2px;border-radius:999px;background:linear-gradient(90deg,#d83b3b,#ff7373);transition:width .35s ease}
+.score-row.winner .score-fill{background:linear-gradient(90deg,#22b66f,#5bd99a)}
+.score-row.winner .score-name,.score-row.winner .score-value{color:var(--good)}
+.score-value{font-weight:900;min-width:70px;text-align:right}
+.brand-lockup{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:20px;font-size:.92rem;font-weight:850;letter-spacing:-.01em}
+.tc-mark{width:40px;height:40px;border-radius:11px;display:inline-grid;place-items:center;background:linear-gradient(145deg,var(--accent2),var(--accent));color:#fff;font-size:18px;font-weight:900;box-shadow:0 8px 24px rgba(124,58,237,.32)}
+.brand-name{color:var(--text)}
+.brand-divider{color:var(--muted)}
+.brand-tool{color:#c4b5fd}
+header h1{letter-spacing:-.04em}
+.badge{border-color:rgba(168,85,247,.32);background:rgba(124,58,237,.10);color:#d8b4fe;font-weight:800}
+.card{box-shadow:0 18px 50px rgba(0,0,0,.22)}
+input:focus,select:focus{outline:none;border-color:#8b5cf6;box-shadow:0 0 0 3px rgba(124,58,237,.13)}
+.secondary{box-shadow:none}
+html[data-theme="light"] .brand-name{color:#17202b}
+html[data-theme="light"] .brand-tool{color:#6d28d9}
+html[data-theme="light"] .badge{color:#6d28d9;background:#f3e8ff;border-color:#d8b4fe}
+@media(prefers-color-scheme:light){html[data-theme="system"] .brand-name{color:#17202b}html[data-theme="system"] .brand-tool{color:#6d28d9}html[data-theme="system"] .badge{color:#6d28d9;background:#f3e8ff;border-color:#d8b4fe}}
+@media(max-width:760px){.score-row{grid-template-columns:1fr auto}.score-track{grid-column:1/3}.score-value{grid-column:2/3;grid-row:1}.brand-divider{display:none}.brand-tool{width:100%}}
+
+</style>
+</head>
+<body><div class="theme-control"><label for="themeSelect">Theme</label><select id="themeSelect" onchange="setTheme(this.value)"><option value="system">System</option><option value="dark">Dark</option><option value="light">Light</option></select></div>
+<main class="wrap">
+<header>
+<div class="brand-lockup"><span class="tc-mark">TC</span><span class="brand-name">Torn Companion</span><span class="brand-divider">/</span><span class="brand-tool">War Payouts</span></div>
+<h1>Ranked War Payouts</h1>
+<p class="subtitle">War history, score comparison and faction payout workflow in one place.</p>
+<p><span class="badge">V2.3.0 • Torn Companion branding</span></p>
+</header>
+
+<section class="card">
+<h2>Torn API</h2>
+<div class="grid">
+<div><label for="apiKey">Torn API Key</label><input id="apiKey" type="password" autocomplete="off" placeholder="Paste API key here"></div>
+<div><label for="apiWarId">Ranked War ID</label><input id="apiWarId" type="number" inputmode="numeric" placeholder="Enter War ID"></div>
+</div>
+<div class="actions"><button type="button" onclick="loadWarFromAPI()">Load War From Torn</button><button class="secondary" type="button" onclick="findFactionWars()">Find Faction Wars</button><button class="secondary" type="button" onclick="toggleKey()">Show / Hide Key</button>
+<a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;border-radius:9px;border:1px solid var(--border);background:var(--panel2);color:var(--text);text-decoration:none;font-weight:700">Open Torn API Page</a></div>
+<div class="api-note">Your key is used only for requests to Torn's API. This page does not save it to localStorage or include it in exported payout files.</div>
+<p class="muted" style="font-size:.85rem"><strong>API key:</strong> Open Torn’s API page using the button above and use a <strong>Limited Access</strong> API key. Do not use a Full Access key.</p><div id="factionDetected" class="war-summary" style="display:none;margin-bottom:12px"><div class="label">Faction detected</div><div class="value" id="factionDetectedName">—</div></div>
+<div id="warBrowser" class="war-browser" style="display:none"><div class="war-browser-head"><strong>Recent Faction Ranked Wars</strong><button id="warBrowserToggle" class="secondary war-browser-toggle" type="button" onclick="toggleWarBrowser()" title="Collapse or expand war list" aria-label="Collapse or expand war list" aria-expanded="true">▼</button></div><div id="warList" class="war-list"></div><div id="warBrowserNote" class="muted" style="font-size:.82rem;margin-top:8px"></div></div>
+<div id="apiStatus" class="api-status muted">API mode ready.</div>
+<div id="warSummary" class="war-summary">
+<div class="war-summary-grid">
+<div><div class="label">Loaded War</div><div class="value" id="sumWar">—</div></div>
+<div><div class="label">Opponent</div><div class="value" id="sumOpponent">—</div></div>
+<div><div class="label">Faction Hits</div><div class="value" id="sumHits">—</div></div>
+<div><div class="label">Reward Items</div><div class="value" id="sumRewards">—</div></div>
+</div>
+<div id="scoreCard" class="score-card">
+  <div class="score-head"><div class="score-title">War Score</div><div id="scoreWinner" class="score-winner">—</div></div>
+  <div id="scoreBars" class="score-bars"></div>
+</div>
+</div>
+</section>
+
+<section class="card">
+<div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
+<div><h2 style="margin-bottom:4px">War Rewards</h2><div class="muted">Rewards found in the war report are valued using Torn Item Market data. You can also add or edit rewards manually.</div></div>
+<div class="actions" style="margin-top:0"><button class="secondary" type="button" onclick="addRewardRow()">+ Add Reward</button><button class="secondary" type="button" onclick="refreshRewardPrices()">Refresh Prices</button></div>
+</div>
+<div id="rewardRows" style="margin-top:16px"></div>
+<div class="reward-total"><div><strong>Calculated Reward Value</strong><div id="rewardNote" class="muted" style="font-size:.85rem">No rewards loaded.</div></div><strong id="rewardTotal">$0</strong></div>
+</section>
+
+<section class="card">
+<h2>War Details</h2>
+<div class="grid">
+<div><label for="warId">Ranked War ID</label><input id="warId" type="number" inputmode="numeric" placeholder="Loaded from API" readonly></div>
+<div><label for="prize">Total Prize Value ($) — editable override</label><input id="prize" type="number" inputmode="numeric" min="0" step="1" placeholder="Enter total prize value"></div>
+<div><label for="cut">Faction Cut (%)</label><input id="cut" type="number" inputmode="decimal" min="0" max="100" step="0.1" placeholder="Enter faction cut">
+<label style="margin-top:9px;display:flex;align-items:center;gap:8px;color:var(--muted)"><input id="rememberCut" type="checkbox" style="width:auto" onchange="saveCutPreference()"> Remember faction cut on this device</label></div>
+<div><label>Successful War Hits</label><input id="hits" type="number" inputmode="numeric" placeholder="Loaded from API" readonly></div>
+</div>
+<div class="actions"><button type="button" onclick="calculate()">Calculate Payouts</button><button class="secondary" type="button" onclick="clearAll()">Reset / Clear</button></div>
+</section>
+
+<section class="card">
+<h2>Payout Summary</h2>
+<div class="summary">
+<div class="stat"><span>Total Prize</span><strong id="totalPrize">$0</strong></div>
+<div class="stat"><span>Faction Keeps</span><strong id="factionKeeps">$0</strong></div>
+<div class="stat"><span>Member Pool</span><strong id="memberPool">$0</strong></div>
+<div class="stat"><span>Total Valid Hits</span><strong id="totalHits">267</strong></div>
+<div class="stat"><span>Exact Value Per Hit</span><strong id="perHit">$0</strong></div>
+<div class="stat"><span>Reconciliation</span><strong id="reconcile">—</strong></div>
+</div>
+<p id="status" class="muted">Enter your API key and Ranked War ID to begin.</p>
+</section>
+
+<section class="card">
+<div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
+<div><h2 style="margin-bottom:4px">Member Payouts</h2><div class="muted">Only verified successful Ranked War hits are included.</div></div>
+<div class="actions" style="margin-top:0"><button type="button" onclick="openFactionBank()">Open Faction Bank</button><button type="button" onclick="openNextFactionPayout()">Pay Next</button><button class="secondary" onclick="copyPayouts()">Copy Payouts</button>
+<label style="display:flex;align-items:center;gap:7px;font-size:.86rem;font-weight:700;cursor:pointer"><input id="autoMarkPaid" type="checkbox" onchange="saveAutoMarkPaid()"> Automatically mark Paid when Pay is clicked</label><button class="secondary" onclick="exportCSV()">Export CSV</button></div>
+</div>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Member</th><th>Torn ID</th><th class="num">War Hits</th><th class="num">Payout</th><th class="num">Bank</th><th class="num">Paid</th></tr></thead>
+<tbody id="payoutRows"></tbody>
+<tfoot><tr><td>Total</td><td></td><td class="num" id="tableHits">0</td><td class="num" id="tableTotal">$0</td><td></td><td></td></tr></tfoot>
+</table>
+</div>
+<div class="payment-summary"><div>Paid: <strong id="paidCount">0 / 0</strong></div><div>Paid total: <strong id="paidTotal">$0</strong></div><div>Remaining: <strong id="remainingTotal">$0</strong></div></div>
+<div class="progress-wrap"><div class="progress-track"><div id="paidProgress" class="progress-bar"></div></div><div class="muted" id="paidPercent" style="font-size:.82rem;margin-top:6px">0% paid</div></div>
+<div class="actions" style="margin-top:12px">
+<button class="secondary" type="button" onclick="markAllPaid()">Mark All Paid</button>
+<button class="secondary" type="button" onclick="clearPaid()">Clear Paid</button>
+<button class="secondary" type="button" onclick="printPayoutReport()">Print / Save Report</button>
+</div>
+<p class="muted" style="font-size:.85rem"><strong>Faction Bank Payouts:</strong> Pay opens Torn's faction controls with the member, exact payout amount and Add to balance option pre-filled. Review the player and amount in Torn, then confirm the transaction yourself. The optional Auto-mark setting marks the member Paid as soon as Pay is clicked; it is off by default and remembered on this device. Tick Paid after the transfer is complete. Pay Next opens the next unpaid member.</p>
+<p class="muted" style="font-size:.85rem">Paid status is saved on this device for each War ID. Former members may need your faction's normal alternative payout process if Torn no longer allows their faction balance to be credited.</p>
+<p class="muted" style="font-size:.85rem">Whole-dollar payouts use a largest-remainder allocation so the member payouts add up exactly to the whole-dollar member pool.</p>
+</section>
+
+<footer><strong>Torn Companion</strong> · Ranked War Payouts · V2.3.0<br><span class="muted">Not affiliated with Torn or Chedburn Networks.</span></footer>
+</main>
+<script>
+let members = [
+      { name: "eKININJ4", id: 2857400, hits: 49 },
+      { name: "Mad_man00", id: 268506, hits: 45 },
+      { name: "Ninja-Squirrel", id: 1854159, hits: 35 },
+      { name: "Keparat", id: 3319359, hits: 27 },
+      { name: "furypvp", id: 519404, hits: 22 },
+      { name: "CassiusDio", id: 569273, hits: 22 },
+      { name: "homesicck", id: 939773, hits: 13 },
+      { name: "Zaily", id: 1918162, hits: 13 },
+      { name: "Arodicus", id: 3813259, hits: 12 },
+      { name: "osrspecp", id: 3667680, hits: 5 },
+      { name: "karenbaby", id: 250518, hits: 4 },
+      { name: "SirTwitchOlot", id: 523726, hits: 4 },
+      { name: "Midatu", id: 3968938, hits: 4 },
+      { name: "darksun003", id: 2080000, hits: 3 },
+      { name: "VexRen", id: 3458986, hits: 3 },
+      { name: "esquire", id: 698244, hits: 2 },
+      { name: "TugaXL", id: 442232, hits: 1 },
+      { name: "Bardam", id: 2621181, hits: 1 },
+      { name: "Reddler02", id: 4204685, hits: 1 },
+      { name: "Allstarw3tback", id: 4270941, hits: 1 }
+];
+const money2 = new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2});
+const money0 = new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0});
+let lastRows=[];
+let rewards=[];
+let itemCatalog=new Map();
+let lastApiKey='';
+let paidMembers=new Set();
+let activeFactionId=null;
+let activeFactionName='';
+
+
+function allocateWholeDollars(pool,totalHits){
+  const wholePool=Math.round(pool);
+  const exact=members.map(m=>({...m,raw:wholePool*m.hits/totalHits}));
+  const rows=exact.map(x=>({...x,payout:Math.floor(x.raw),fraction:x.raw-Math.floor(x.raw)}));
+  let remaining=wholePool-rows.reduce((s,x)=>s+x.payout,0);
+  [...rows].sort((a,b)=>b.fraction-a.fraction || b.hits-a.hits || a.name.localeCompare(b.name))
+    .slice(0,remaining).forEach(w=>{ const r=rows.find(x=>x.id===w.id); r.payout++; });
+  return rows;
+}
+
+
+function applyTheme(t){t=['system','dark','light'].includes(t)?t:'system';document.documentElement.setAttribute('data-theme',t);const e=document.getElementById('themeSelect');if(e)e.value=t;}
+function setTheme(t){localStorage.setItem('btwTheme',t);applyTheme(t);}
+function loadTheme(){applyTheme(localStorage.getItem('btwTheme')||'system');}
+
+function cutStorageKey(){return 'btwRememberFactionCut';}
+function saveCutPreference(){const c=document.getElementById('rememberCut'),v=document.getElementById('cut').value.trim();if(c.checked&&v!=='')localStorage.setItem(cutStorageKey(),v);else if(!c.checked)localStorage.removeItem(cutStorageKey());}
+function loadCutPreference(){const v=localStorage.getItem(cutStorageKey());if(v!==null){document.getElementById('cut').value=v;document.getElementById('rememberCut').checked=true;}}
+function paidStorageKey(){const war=document.getElementById('warId').value||document.getElementById('apiWarId').value||'unknown';return 'btwPaidWar:'+war;}
+function loadPaidState(){paidMembers=new Set();try{const a=JSON.parse(localStorage.getItem(paidStorageKey())||'[]');if(Array.isArray(a))a.forEach(x=>paidMembers.add(Number(x)));}catch(e){}}
+function savePaidState(){localStorage.setItem(paidStorageKey(),JSON.stringify([...paidMembers]));}
+function markAllPaid(){if(!lastRows.length)return;lastRows.forEach(r=>paidMembers.add(Number(r.id)));savePaidState();renderRows();saveWarHistory();}
+function clearPaid(){if(!lastRows.length)return;if(confirm('Clear all paid checkmarks for this war?')){paidMembers.clear();savePaidState();renderRows();saveWarHistory();}}
+function printPayoutReport(){if(!lastRows.length){alert('Load and calculate a war first.');return;}window.print();}
+function togglePaid(id,checked){id=Number(id);if(checked)paidMembers.add(id);else paidMembers.delete(id);savePaidState();renderRows();saveWarHistory();}
+function updatePaymentSummary(){const p=lastRows.filter(r=>paidMembers.has(Number(r.id))),paid=p.reduce((a,r)=>a+r.payout,0),total=lastRows.reduce((a,r)=>a+r.payout,0);document.getElementById('paidCount').textContent=`${p.length} / ${lastRows.length}`;document.getElementById('paidTotal').textContent=money0.format(paid);document.getElementById('remainingTotal').textContent=money0.format(Math.max(0,total-paid));
+const pct=lastRows.length?Math.round((p.length/lastRows.length)*100):0;
+const bar=document.getElementById('paidProgress'),label=document.getElementById('paidPercent');
+if(bar)bar.style.width=pct+'%';if(label)label.textContent=pct+'% paid';}
+
+function numbersOnly(el,label,allowDecimal=false){
+  const raw=String(el.value).trim();
+  if(raw==='') return true;
+  const re=allowDecimal?/^\d+(\.\d+)?$/:/^\d+$/;
+  if(!re.test(raw)){
+    el.classList.add('invalid');
+    alert(label+' - enter numbers only.');
+    el.focus();
+    return false;
+  }
+  el.classList.remove('invalid');
+  return true;
+}
+function attachNumberValidation(){
+  const rules=[
+    ['apiWarId','Ranked War ID',false],
+    ['prize','Total Prize Value',false],
+    ['cut','Faction Cut',true]
+  ];
+  for(const [id,label,decimal] of rules){
+    const el=document.getElementById(id);
+    el.addEventListener('blur',()=>numbersOnly(el,label,decimal));
+  }
+}
+
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function normalizeItems(data){
+  const src=data?.items ?? data?.torn?.items ?? data;
+  const out=new Map();
+  if(Array.isArray(src)){
+    for(const x of src){const id=Number(x?.id ?? x?.item_id); if(id) out.set(id,x?.name ?? x?.item_name ?? ('Item '+id));}
+  }else if(src && typeof src==='object'){
+    for(const [k,x] of Object.entries(src)){const id=Number(x?.id ?? x?.item_id ?? k); if(id) out.set(id,x?.name ?? x?.item_name ?? ('Item '+id));}
+  }
+  return out;
+}
+async function ensureItemCatalog(key){
+  if(itemCatalog.size) return;
+  try{
+    const data=await tornFetch('/torn/items',key);
+    itemCatalog=normalizeItems(data);
+  }catch(e){ /* manual reward rows still work without catalog */ }
+}
+function walkRewards(node,path=[],out=[]){
+  if(!node || typeof node!=='object') return out;
+  if(Array.isArray(node)){node.forEach((v,i)=>walkRewards(v,path.concat(i),out));return out;}
+  for(const [k,v] of Object.entries(node)){
+    const kp=String(k).toLowerCase(), next=path.concat(k);
+    const rewardContext=next.some(x=>/reward|cache|item|loot|prize/.test(String(x).toLowerCase()));
+    if(rewardContext){
+      if(v && typeof v==='object'){
+        const id=Number(v.id ?? v.item_id ?? (/^\d+$/.test(k)?k:0));
+        const qty=Number(v.quantity ?? v.qty ?? v.amount ?? v.count ?? 1);
+        const name=v.name ?? v.item_name ?? (id?itemCatalog.get(id):null);
+        if(id && qty>0 && Number.isFinite(qty)) out.push({id,name:name||('Item '+id),qty});
+      }else if(/^\d+$/.test(k) && Number(v)>0){
+        const id=Number(k); out.push({id,name:itemCatalog.get(id)||('Item '+id),qty:Number(v)});
+      }
+    }
+    walkRewards(v,next,out);
+  }
+  return out;
+}
+function dedupeRewards(list){
+  const m=new Map();
+  for(const r of list){
+    if(!r.id || !r.qty) continue;
+    const old=m.get(r.id);
+    if(old) old.qty=Math.max(old.qty,r.qty); else m.set(r.id,{...r});
+  }
+  return [...m.values()];
+}
+function marketShape(data){
+  const root=data?.itemmarket ?? data?.item_market ?? data;
+  const listings=Array.isArray(root?.listings)?root.listings:Array.isArray(data?.listings)?data.listings:[];
+  const avg=Number(root?.average_price ?? data?.average_price ?? root?.item?.average_price ?? data?.item?.average_price ?? 0);
+  const prices=listings.map(x=>Number(x?.price ?? x?.cost ?? x?.amount)).filter(x=>Number.isFinite(x)&&x>0);
+  return {average:avg>0?avg:0,lowest:prices.length?Math.min(...prices):0};
+}
+async function fetchRewardPrice(r,key){
+  const data=await tornFetch('/market/'+encodeURIComponent(r.id)+'/itemmarket',key);
+  const m=marketShape(data);
+  r.average=m.average; r.lowest=m.lowest;
+  // Default valuation: average price; fall back to lowest listing if average is unavailable.
+  r.unitPrice=r.average || r.lowest || 0;
+}
+function renderRewards(){
+  const box=document.getElementById('rewardRows');
+  if(!rewards.length){box.innerHTML='<div class="muted">No reward items detected yet. Load a war or add a reward manually.</div>';updateRewardTotal(false);return;}
+  box.innerHTML=`<div class="reward-grid">
+    <div class="head">Item</div><div class="head">Qty</div><div class="head">Average</div><div class="head">Lowest</div><div class="head">Used Price</div><div></div>
+    ${rewards.map((r,i)=>`<div class="wide"><input value="${esc(r.name||'')}" placeholder="Item name" oninput="rewards[${i}].name=this.value"></div>
+      <div><input type="number" inputmode="numeric" min="1" value="${r.qty||1}" oninput="rewards[${i}].qty=Math.max(1,Number(this.value)||1);updateRewardTotal(true)"></div>
+      <div><input value="${r.average?money0.format(r.average):'—'}" readonly></div>
+      <div><input value="${r.lowest?money0.format(r.lowest):'—'}" readonly></div>
+      <div><input type="number" inputmode="numeric" min="0" value="${Math.round(r.unitPrice||0)}" oninput="rewards[${i}].unitPrice=Math.max(0,Number(this.value)||0);updateRewardTotal(true)"></div>
+      <div><button class="secondary smallbtn" type="button" onclick="removeReward(${i})">Remove</button></div>`).join('')}
+  </div>`;
+  updateRewardTotal(false);
+}
+function addRewardRow(){
+  const idText=prompt('Enter the Torn item ID for this reward:');
+  if(idText===null) return;
+  if(!/^\d+$/.test(idText.trim())){alert('Item ID - enter numbers only.');return;}
+  const id=Number(idText), name=itemCatalog.get(id)||('Item '+id);
+  rewards.push({id,name,qty:1,average:0,lowest:0,unitPrice:0});
+  renderRewards();
+  if(lastApiKey) refreshRewardPrices();
+}
+function removeReward(i){rewards.splice(i,1);renderRewards();}
+function updateRewardTotal(writePrize=true){
+  const total=Math.round(rewards.reduce((sum,r)=>sum+(Number(r.qty)||0)*(Number(r.unitPrice)||0),0));
+  document.getElementById('rewardTotal').textContent=money0.format(total);
+  document.getElementById('rewardNote').textContent=rewards.length?`${rewards.length} reward item type${rewards.length===1?'':'s'} valued.`:'No rewards loaded.';
+  if(writePrize && total>0){
+    document.getElementById('prize').value=total;
+    if(document.getElementById('cut').value.trim()!=='') calculate();
+  }
+  return total;
+}
+async function refreshRewardPrices(){
+  const key=(document.getElementById('apiKey').value||lastApiKey).trim();
+  if(!key){alert('Enter your Torn API key first.');return;}
+  if(!rewards.length){alert('There are no reward items to price yet.');return;}
+  const note=document.getElementById('rewardNote');
+  note.textContent='Loading Item Market prices…';
+  try{
+    for(const r of rewards) await fetchRewardPrice(r,key);
+    renderRewards(); updateRewardTotal(true);
+    note.textContent='Item Market prices loaded. Average price is used by default; Used Price can be edited.';
+  }catch(e){note.textContent='Market price error: '+e.message;note.className='warn';}
+}
+async function loadRewardsFromReport(report,key){
+  const rw=report?.rankedwarreport ?? report?.ranked_war_report ?? report;
+  const factions=Array.isArray(rw?.factions)?rw.factions:Object.values(rw?.factions||{});
+  const BTW_ID=activeFactionId;
+  const ours=factions.find(f=>Number(f?.id)===Number(BTW_ID));
+  const items=Array.isArray(ours?.rewards?.items)?ours.rewards.items:[];
+  rewards=items.map(x=>({
+    id:Number(x.id),
+    name:x.name || ('Item '+x.id),
+    qty:Number(x.quantity)||1,
+    average:0,lowest:0,unitPrice:0
+  })).filter(x=>x.id>0);
+  renderRewards();
+  if(rewards.length){
+    document.getElementById('rewardNote').textContent='Ranked War rewards found. Loading Item Market prices…';
+    await refreshRewardPrices();
+  }else{
+    document.getElementById('rewardNote').textContent='No item rewards were listed for your faction in this Ranked War report.';
+  }
+}
+function toggleKey(){
+  const el=document.getElementById('apiKey');
+  el.type=el.type==='password'?'text':'password';
+}
+
+async function tornFetch(path,key){
+  const url='https://api.torn.com/v2'+path;
+  const response=await fetch(url,{headers:{'Authorization':'ApiKey '+key,'Accept':'application/json'}});
+  let data=null;
+  try{ data=await response.json(); }catch(e){}
+  if(!response.ok){
+    const msg=data?.error?.error || data?.error?.message || data?.error || ('HTTP '+response.status);
+    throw new Error(typeof msg==='string'?msg:JSON.stringify(msg));
+  }
+  return data;
+}
+
+function extractWar(report,warId){
+  // V2 rankedwarreport response shapes may be wrapped; find the object that carries factions/start/end.
+  const candidates=[report,report?.rankedwarreport,report?.ranked_war_report,report?.rankedwar,report?.war];
+  let war=candidates.find(x=>x && typeof x==='object' && (x.factions || x.start || x.start_timestamp || x.started));
+  if(!war && report && typeof report==='object'){
+    for(const v of Object.values(report)){
+      if(v && typeof v==='object' && (v.factions || v.start || v.start_timestamp || v.started)){war=v;break;}
+    }
+  }
+  if(!war) throw new Error('The ranked war report was returned, but its war details could not be read.');
+  const factions=Array.isArray(war.factions)?war.factions:Object.values(war.factions||{});
+  if(factions.length<2) throw new Error('Could not identify both factions in this war.');
+  const start=Number(war.start ?? war.start_timestamp ?? war.started ?? war.started_at);
+  const end=Number(war.end ?? war.end_timestamp ?? war.ended ?? war.ended_at);
+  if(!start || !end) throw new Error('Could not identify the war start/end timestamps.');
+  return {war,factions,start,end,warId};
+}
+
+function factionId(f){ return Number(f?.id ?? f?.faction_id ?? f?.faction?.id); }
+function factionName(f){ return f?.name ?? f?.faction_name ?? f?.faction?.name ?? ('Faction '+factionId(f)); }
+
+function factionFromResponse(data){
+  const candidates=[
+    data?.faction, data?.basic, data?.profile?.faction,
+    data?.user?.faction, data?.faction?.basic
+  ];
+  for(const f of candidates){
+    if(f && Number(f.id)>0) return {id:Number(f.id),name:f.name||('Faction '+f.id)};
+  }
+  return null;
+}
+async function detectMyFaction(key){
+  let found=null;
+  try{found=factionFromResponse(await tornFetch('/faction/basic',key));}catch(e){}
+  if(!found){
+    try{
+      const u=await tornFetch('/user/basic',key);
+      const uid=Number(u?.basic?.id||u?.id||u?.user_id||u?.basic?.player_id);
+      if(uid){
+        const uf=await tornFetch('/user/'+uid+'/faction',key);
+        found=factionFromResponse(uf);
+      }
+    }catch(e){}
+  }
+  if(!found) throw new Error('Could not detect your faction from this API key. Make sure the key belongs to a faction member and has the required faction API access.');
+  activeFactionId=found.id;activeFactionName=found.name;
+  const box=document.getElementById('factionDetected'),name=document.getElementById('factionDetectedName');
+  if(box&&name){name.textContent=`${activeFactionName} [${activeFactionId}]`;box.style.display='block';}
+  return found;
+}
+
+function processedStatus(warId){
+ try{const a=JSON.parse(localStorage.getItem('btwPaidWar:'+warId)||'[]'),h=JSON.parse(localStorage.getItem('btwWarHistory:'+warId)||'null');if(h?.fullyPaid)return'Paid';if(Array.isArray(a)&&a.length)return'Part paid';}catch(e){} return'Not processed';
+}
+function normalizeRankedWars(data){let x=data?.rankedwars??data?.ranked_wars??data?.wars??data;if(Array.isArray(x))return x;if(x&&typeof x==='object')return Object.entries(x).map(([id,w])=>({id:Number(w?.id||id),...w}));return[];}
+function warFactionName(w){const fs=Array.isArray(w?.factions)?w.factions:Object.values(w?.factions||{}),o=fs.find(f=>Number(f?.id)!==Number(activeFactionId));return o?.name||w?.opponent?.name||w?.opponent_name||'Opponent';}
+
+function warOutcome(w){
+ const fs=Array.isArray(w?.factions)?w.factions:Object.values(w?.factions||{});
+ const ours=fs.find(f=>Number(f?.id??f?.faction_id)===Number(activeFactionId));
+ const opp=fs.find(f=>Number(f?.id??f?.faction_id)!==Number(activeFactionId));
+ const winner=Number(w?.winner ?? w?.winner_id ?? w?.winner_faction_id);
+ if(winner) return winner===Number(activeFactionId)?'Win':'Loss';
+ const ourScore=Number(ours?.score),oppScore=Number(opp?.score);
+ if(Number.isFinite(ourScore)&&Number.isFinite(oppScore)){
+   if(ourScore>oppScore)return'Win';
+   if(ourScore<oppScore)return'Loss';
+   return'Draw';
+ }
+ return'—';
+}
+function renderScoreGraph(ourFaction,opponent,war){
+ const card=document.getElementById('scoreCard'),bars=document.getElementById('scoreBars'),winnerEl=document.getElementById('scoreWinner');
+ if(!card||!bars||!winnerEl)return;
+ const ourScore=Number(ourFaction?.score),oppScore=Number(opponent?.score);
+ if(!Number.isFinite(ourScore)||!Number.isFinite(oppScore)){card.style.display='none';return;}
+ const winnerId=Number(war?.winner ?? war?.winner_id ?? war?.winner_faction_id);
+ let winnerFaction=null;
+ if(winnerId) winnerFaction=winnerId===factionId(ourFaction)?ourFaction:winnerId===factionId(opponent)?opponent:null;
+ if(!winnerFaction){
+   if(ourScore>oppScore)winnerFaction=ourFaction;
+   else if(oppScore>ourScore)winnerFaction=opponent;
+ }
+ const max=Math.max(ourScore,oppScore,1);
+ const rows=[[ourFaction,ourScore],[opponent,oppScore]];
+ bars.innerHTML=rows.map(([f,score])=>{
+   const won=winnerFaction&&factionId(f)===factionId(winnerFaction);
+   const width=Math.max(1,(score/max)*100);
+   return `<div class="score-row ${won?'winner':''}"><div class="score-name">${esc(factionName(f))}${won?' 🏆':''}</div><div class="score-track"><div class="score-fill" style="width:${width.toFixed(2)}%"></div></div><div class="score-value">${score.toLocaleString()}</div></div>`;
+ }).join('');
+ winnerEl.textContent=winnerFaction?`${factionName(winnerFaction)} won`:'Draw';
+ winnerEl.className='score-winner '+(winnerFaction&&factionId(winnerFaction)===Number(activeFactionId)?'good':winnerFaction?'bad':'warn');
+ card.style.display='block';
+}
+
+function warTime(w){return Number(w?.end||w?.start||w?.timestamp||0);}
+async function findFactionWars(){
+ const key=document.getElementById('apiKey').value.trim(),status=document.getElementById('apiStatus');
+ if(!key){status.textContent='Enter your Limited Access Torn API key first.';status.className='api-status warn';return;}
+ try{
+  status.textContent='Detecting your faction…';status.className='api-status';
+  await detectMyFaction(key);
+  status.textContent=`Finding ${activeFactionName} ranked wars…`;
+  const data=await tornFetch('/faction/'+encodeURIComponent(activeFactionId)+'/rankedwars',key);
+  let wars=normalizeRankedWars(data).filter(w=>Number(w?.id||w?.war_id||w?.ranked_war_id)>0);wars.sort((a,b)=>warTime(b)-warTime(a));
+  const list=document.getElementById('warList');
+  list.innerHTML=wars.map(w=>{const id=Number(w.id||w.war_id||w.ranked_war_id),d=warTime(w),date=d?new Date(d*1000).toLocaleDateString():'—',outcome=warOutcome(w),oc=outcome==='Win'?'outcome-win':outcome==='Loss'?'outcome-loss':'outcome-draw',st=processedStatus(id),cl=st==='Paid'?'status-paid':st==='Part paid'?'status-part':'status-new';return `<div class="war-item"><div class="wid">#${id}</div><div class="opp">${esc(warFactionName(w))}</div><div class="date">${date}</div><div class="outcome-pill ${oc}">${outcome}</div><div class="status-pill ${cl}">${st}</div><button class="secondary war-load" type="button" onclick="loadFoundWar(${id})">Load</button></div>`;}).join('');
+  document.getElementById('warBrowser').style.display='block';setWarBrowserCollapsed(false);document.getElementById('warBrowserNote').textContent=wars.length?`${wars.length} ranked war${wars.length===1?'':'s'} found. Use Load to open a war.`:'No ranked wars were returned.';
+  status.textContent=wars.length?'Faction ranked-war history loaded.':'No faction ranked wars found.';status.className=wars.length?'api-status good':'api-status warn';
+ }catch(e){status.textContent='War history error: '+e.message;status.className='api-status bad';}
+}
+function setWarBrowserCollapsed(collapsed){
+ const box=document.getElementById('warBrowser'),btn=document.getElementById('warBrowserToggle');
+ if(!box)return;
+ box.classList.toggle('collapsed',collapsed);
+ if(btn){btn.setAttribute('aria-expanded',String(!collapsed));btn.title=collapsed?'Expand war list':'Collapse war list';}
+}
+function toggleWarBrowser(){const box=document.getElementById('warBrowser');if(box)setWarBrowserCollapsed(!box.classList.contains('collapsed'));}
+function loadFoundWar(id){if(!id)return;document.getElementById('apiWarId').value=id;setWarBrowserCollapsed(true);loadWarFromAPI();}
+function saveWarHistory(){
+ const war=document.getElementById('warId').value;if(!war||!lastRows.length)return;
+ const paid=lastRows.filter(r=>paidMembers.has(Number(r.id))).length;
+ localStorage.setItem('btwWarHistory:'+war,JSON.stringify({warId:Number(war),savedAt:Date.now(),opponent:document.getElementById('sumOpponent')?.textContent||'',rewardValue:Number(document.getElementById('prize')?.value)||0,factionCut:Number(document.getElementById('cut')?.value)||0,memberPool:lastRows.reduce((a,r)=>a+r.payout,0),members:lastRows.length,paid,fullyPaid:paid===lastRows.length}));
+}
+
+async function loadWarFromAPI(){
+  const key=document.getElementById('apiKey').value.trim();
+  const warEl=document.getElementById('apiWarId');
+  if(!numbersOnly(warEl,'Ranked War ID',false)) return;
+  const warId=Number(warEl.value);
+  const out=document.getElementById('apiStatus');
+  if(!key || !warId){out.textContent='Enter an API key and Ranked War ID.';out.className='api-status warn';return;}
+  out.textContent='Loading ranked war report…';out.className='api-status muted';
+  try{
+    lastApiKey=key;
+    await detectMyFaction(key);
+    const report=await tornFetch('/faction/'+encodeURIComponent(warId)+'/rankedwarreport',key);
+    const info=extractWar(report,warId);
+    await loadRewardsFromReport(report,key);
+
+    // Determine BTW automatically when present; otherwise use the first faction.
+    const BTW_ID=activeFactionId;
+    const ourFaction=info.factions.find(f=>factionId(f)===BTW_ID) || info.factions[0];
+    const opponent=info.factions.find(f=>factionId(f)!==factionId(ourFaction));
+    const ourId=factionId(ourFaction), opponentId=factionId(opponent);
+    if(!ourId || !opponentId) throw new Error('Could not identify faction IDs from the report.');
+
+    out.textContent='War found. Loading outgoing attacks…';
+
+    // from is exclusive on this endpoint, so subtract one second to include the boundary.
+    const qs=new URLSearchParams({
+      filters:'outgoing', limit:'1000', sort:'ASC',
+      from:String(Math.max(0,info.start-1)), to:String(info.end)
+    });
+    const attackData=await tornFetch('/faction/attacksfull?'+qs.toString(),key);
+    const attacks=Array.isArray(attackData?.attacks)?attackData.attacks:[];
+    const valid=attacks.filter(a =>
+      Number(a?.attacker?.faction_id)===ourId &&
+      Number(a?.defender?.faction_id)===opponentId &&
+      Number(a?.respect_gain)>0
+    );
+
+    const counts=new Map();
+    for(const a of valid){
+      const id=Number(a?.attacker?.id);
+      if(id) counts.set(id,(counts.get(id)||0)+1);
+    }
+
+    // Build names from the historical attack records first. This preserves the
+    // player's name even if they have since left the faction.
+    let names=new Map();
+    for(const a of valid){
+      const id=Number(a?.attacker?.id);
+      const name=a?.attacker?.name ?? a?.attacker?.player_name;
+      if(id && name) names.set(id,name);
+    }
+
+    // Current faction membership can supplement any names missing from old attacks.
+    try{
+      const memberData=await tornFetch('/faction/'+ourId+'/members',key);
+      const arr=Array.isArray(memberData?.members)?memberData.members:Object.values(memberData?.members||{});
+      for(const m of arr){
+        const id=Number(m?.id ?? m?.player_id ?? m?.user_id);
+        const name=m?.name ?? m?.player_name;
+        if(id && name && !names.has(id)) names.set(id,name);
+      }
+    }catch(e){}
+
+    // For anyone who has since left the faction and still has no historical name,
+    // resolve the Torn ID individually. Limit concurrency to keep API usage gentle.
+    const unresolved=[...counts.keys()].filter(id=>!names.has(id));
+    if(unresolved.length){
+      out.textContent=`Resolving ${unresolved.length} former member name${unresolved.length===1?'':'s'}…`;
+      const resolveOne=async id=>{
+        try{
+          const u=await tornFetch('/user/'+id+'/basic',key);
+          // API v2 UserBasicResponse nests the user under "profile".
+          // Keep the older shapes too so the resolver is resilient.
+          const b=u?.profile ?? u?.basic ?? u?.user ?? u;
+          const name=b?.name ?? b?.player_name ?? b?.username;
+          if(name) names.set(id,name);
+        }catch(e){}
+      };
+      for(let i=0;i<unresolved.length;i+=3){
+        await Promise.all(unresolved.slice(i,i+3).map(resolveOne));
+      }
+    }
+
+    members=[...counts.entries()].map(([id,hits])=>({name:names.get(id)||('Former member ['+id+']'),id,hits}))
+      .sort((a,b)=>b.hits-a.hits || a.name.localeCompare(b.name));
+
+    const total=members.reduce((sum,m)=>sum+m.hits,0);
+    document.getElementById('warId').value=warId;
+    const ws=document.getElementById('warSummary');
+    if(ws){ws.style.display='block';document.getElementById('sumWar').textContent='#'+warId;document.getElementById('sumOpponent').textContent=opponent.name||('Faction '+opponent.id);document.getElementById('sumHits').textContent=total;document.getElementById('sumRewards').textContent=rewards.length?rewards.map(r=>`${r.qty}× ${r.name}`).join(', '):'None';}
+    renderScoreGraph(ourFaction,opponent,info.war);
+    loadPaidState();
+    document.getElementById('hits').value=total;
+    document.getElementById('apiWarId').value=warId;
+    document.getElementById('status').textContent='Live API data loaded. Enter/check the prize value and faction cut, then calculate.';
+    document.getElementById('status').className='good';
+    out.textContent=`Loaded ${factionName(ourFaction)} vs ${factionName(opponent)} — ${total} valid war hits from ${members.length} hit makers.`;
+    out.className='api-status good';
+    calculate();
+  }catch(err){
+    out.textContent='API error: '+err.message;
+    out.className='api-status warn';
+  }
+}
+
+function calculate(){
+  const prizeEl=document.getElementById('prize'), cutEl=document.getElementById('cut');
+  if(!numbersOnly(prizeEl,'Total Prize Value',false) || !numbersOnly(cutEl,'Faction Cut',true)) return;
+  if(prizeEl.value.trim()==='' || cutEl.value.trim()===''){
+    document.getElementById('status').textContent='Enter the prize value and faction cut to calculate payouts.';
+    document.getElementById('status').className='muted'; return;
+  }
+  const prize=Number(prizeEl.value);
+  const cut=Number(cutEl.value);
+  if(document.getElementById('rememberCut').checked) saveCutPreference();
+  const totalHits=members.reduce((s,m)=>s+m.hits,0);
+  if(!Number.isFinite(prize)||prize<0||!Number.isFinite(cut)||cut<0||cut>100){
+    document.getElementById('status').textContent='Please enter a valid prize and a faction cut between 0% and 100%.';
+    document.getElementById('status').className='warn'; return;
+  }
+  const faction=prize*(cut/100), pool=prize-faction, perHit=pool/totalHits;
+  lastRows=allocateWholeDollars(pool,totalHits);
+  const paid=lastRows.reduce((s,r)=>s+r.payout,0);
+  document.getElementById('totalPrize').textContent=money2.format(prize);
+  document.getElementById('factionKeeps').textContent=money2.format(faction);
+  document.getElementById('memberPool').textContent=money2.format(pool);
+  document.getElementById('totalHits').textContent=totalHits.toLocaleString();
+  document.getElementById('perHit').textContent=money0.format(Math.round(perHit));
+  document.getElementById('tableHits').textContent=totalHits.toLocaleString();
+  document.getElementById('tableTotal').textContent=money0.format(paid);
+  document.getElementById('reconcile').textContent=money0.format(paid)+' paid';
+  document.getElementById('reconcile').className='good';
+  document.getElementById('status').textContent=`War #${document.getElementById('warId').value||'—'} calculated with a ${cut.toFixed(2)}% faction cut.`;
+  document.getElementById('status').className='good';
+  renderRows();
+}
+
+const AUTO_MARK_PAID_KEY='tornPayoutAutoMarkPaid';
+function loadAutoMarkPaid(){
+  const el=document.getElementById('autoMarkPaid');
+  if(el) el.checked=localStorage.getItem(AUTO_MARK_PAID_KEY)==='1';
+}
+function saveAutoMarkPaid(){
+  const el=document.getElementById('autoMarkPaid');
+  localStorage.setItem(AUTO_MARK_PAID_KEY,el&&el.checked?'1':'0');
+}
+
+function factionBankPayoutUrl(id,amount){
+  // Torn faction bank "Add to balance" deep link.
+  // Pre-fills the member and exact calculated payout amount.
+  return 'https://www.torn.com/factions.php?step=your#/tab=controls'
+    +'&addMoneyTo='+encodeURIComponent(String(id))
+    +'&money='+encodeURIComponent(String(Math.round(amount)));
+}
+function openMemberFactionPayout(id){
+  const row=lastRows.find(r=>Number(r.id)===Number(id));
+  if(!row){alert('Calculate the payouts first.');return;}
+  // With `noopener`, some browsers intentionally return null even when the
+  // new Torn tab opens successfully. Since this function only runs from a
+  // direct Pay/Pay Next click, mark Paid based on the user's enabled setting.
+  window.open(factionBankPayoutUrl(row.id,row.payout),'_blank','noopener');
+  const auto=document.getElementById('autoMarkPaid');
+  if(auto?.checked && !paidMembers.has(Number(row.id))){
+    paidMembers.add(Number(row.id));
+    savePaidState();
+    renderRows();
+    saveWarHistory();
+  }
+}
+function openNextFactionPayout(){
+  if(!lastRows.length){calculate();if(!lastRows.length)return;}
+  const row=lastRows.find(r=>!paidMembers.has(Number(r.id)));
+  if(!row){alert('All members are currently marked as paid.');return;}
+  openMemberFactionPayout(row.id);
+}
+function renderRows(){
+  document.getElementById('payoutRows').innerHTML=lastRows.map(r=>{const paid=paidMembers.has(Number(r.id));return `<tr class="${paid?'paid-row':''}"><td><strong>${esc(r.name)}</strong></td><td>${r.id}</td><td class="num">${r.hits}</td><td class="num"><strong>${money0.format(r.payout)}</strong></td><td class="num"><button class="secondary smallbtn" type="button" onclick="openMemberFactionPayout(${r.id})" ${paid?'disabled':''}>Pay</button></td><td class="num"><input class="paid-check" type="checkbox" ${paid?'checked':''} aria-label="Mark ${esc(r.name)} paid" onchange="togglePaid(${r.id},this.checked)"></td></tr>`;}).join('');
+  updatePaymentSummary();
+}
+function openFactionBank(){
+  window.open('https://www.torn.com/factions.php?step=your#/tab=controls','_blank','noopener');
+}
+function clearAll(){
+  members=[];
+  lastRows=[];
+  rewards=[];
+  itemCatalog=new Map();
+  lastApiKey='';
+  for(const id of ['apiKey','apiWarId','warId','prize','cut','hits']){
+    const el=document.getElementById(id); if(el){el.value='';el.classList.remove('invalid');}
+  }
+  document.getElementById('apiStatus').textContent='API mode ready.';
+  document.getElementById('apiStatus').className='api-status muted';
+  document.getElementById('totalPrize').textContent='$0';
+  document.getElementById('factionKeeps').textContent='$0';
+  document.getElementById('memberPool').textContent='$0';
+  document.getElementById('totalHits').textContent='0';
+  document.getElementById('perHit').textContent='$0';
+  document.getElementById('reconcile').textContent='—';
+  document.getElementById('reconcile').className='';
+  document.getElementById('tableHits').textContent='0';
+  document.getElementById('tableTotal').textContent='$0';
+  document.getElementById('payoutRows').innerHTML='';
+  renderRewards();
+  document.getElementById('status').textContent='Enter your API key and Ranked War ID to begin.';
+  document.getElementById('status').className='muted';
+  updatePaymentSummary();
+  loadCutPreference();
+}
+async function copyPayouts(){
+  if(!lastRows.length) calculate();
+  const text=lastRows.map(r=>`${r.name} [${r.id}] — ${r.hits} hits — ${money0.format(r.payout)}`).join('\n');
+  try{await navigator.clipboard.writeText(text);document.getElementById('status').textContent='Payout list copied to clipboard.';document.getElementById('status').className='good';}
+  catch{document.getElementById('status').textContent='Clipboard access was blocked by the browser.';document.getElementById('status').className='warn';}
+}
+function exportCSV(){
+  if(!lastRows.length) calculate();
+  const lines=[['Member','Torn ID','War Hits','Payout'],...lastRows.map(r=>[r.name,r.id,r.hits,r.payout])];
+  const csv=lines.map(row=>row.map(v=>`"${String(v).replaceAll('"','""')}"`).join(',')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`BTW-War-${document.getElementById('warId').value||'payout'}.csv`;a.click();URL.revokeObjectURL(a.href);
+}
+loadTheme();
+loadAutoMarkPaid();
+attachNumberValidation();
+clearAll();
+loadCutPreference();
+</script>
+</body>
+</html>
