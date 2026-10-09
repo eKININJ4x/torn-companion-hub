@@ -43,7 +43,7 @@
     }
     requests.clear();
     window.dispatchEvent(new Event('tc-api-change'));
-    render();
+    render(true);
   }
   function save(key, remember) {
     const revision = Date.now() + ':' + Math.random().toString(36).slice(2);
@@ -92,10 +92,19 @@
       options.signal?.removeEventListener('abort', abort);
     }
   }
-  function render() {
+  function render(collapse = false) {
     const saved = record();
     const key = saved?.key || '';
     if (generation === 0) activeKey = key;
+    const panel = document.getElementById('tcApiDetails');
+    const summary = document.getElementById('tcApiSummary');
+    if (panel && (collapse === true || !panel.dataset.initialized)) {
+      panel.open = !key;
+      panel.dataset.initialized = '1';
+    }
+    if (summary) summary.textContent = key
+      ? 'Shared key saved · Expand to replace or clear it'
+      : 'No shared key saved · Expand to enter your key';
     if (document.getElementById('tcKey')) {
       document.getElementById('tcKey').value = key;
       document.getElementById('tcRemember').checked = !!saved?.remember;
