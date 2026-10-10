@@ -4,18 +4,18 @@
  const STORE='tc:education:manual:v1';
  const $=id=>document.getElementById(id);
  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- let saved=null;
- try{saved=JSON.parse(localStorage.getItem(STORE)||'null')}catch{}
+ let saved=null, apiSnapshot=null;
+ try{saved=JSON.parse(localStorage.getItem(STORE)||'null');if(!saved||typeof saved!=='object'||!Array.isArray(saved.completed))saved=null}catch{}
  function seedDurations(){for(const [code,seconds] of Object.entries(window.TC_MANUAL_DURATIONS||{})){if(!courseDurations.has(code))courseDurations.set(code,seconds)}}
  function snapshot(){return {completed:[...completed],merits:Number($('merits').value),wsu:$('wsu').checked,principal:$('principal').checked,job:$('manualJob').value,points:Number($('manualJobPoints').value),current:currentCode,ends:currentCourseEndsAt,mode:apiMode?'api':'manual'}}
  function save(){if(apiMode)return; saved=snapshot();try{localStorage.setItem(STORE,JSON.stringify(saved));$('tcManualSaved').textContent='Manual progress saved in this browser.'}catch{$('tcManualSaved').textContent='Browser storage is unavailable. Keep this page open to retain progress.'}}
  function restore(){
-  if(!saved)return;
-  const valid=new Set(COURSE_LIST.map(c=>c[0]));completed.clear();for(const code of saved.completed||[])if(valid.has(code))completed.add(code);
-  $('merits').value=Math.min(10,Math.max(0,Number(saved.merits)||0));$('wsu').checked=!!saved.wsu;$('principal').checked=!!saved.principal;
-  $('manualJob').value=['fitness','hair'].includes(saved.job)?saved.job:'';$('manualJobPoints').value=Math.max(0,Number(saved.points)||0);
-  currentCode=valid.has(saved.current)&&!completed.has(saved.current)?saved.current:null;
-  currentCourseEndsAt=currentCode&&Number.isFinite(Number(saved.ends))&&Number(saved.ends)>0?Number(saved.ends):null;
+  const state=saved||{completed:[],merits:0,wsu:false,principal:false,job:'',points:0,current:null,ends:null};
+  const valid=new Set(COURSE_LIST.map(c=>c[0]));completed.clear();for(const code of state.completed||[])if(valid.has(code))completed.add(code);
+  $('merits').value=Math.min(10,Math.max(0,Number(state.merits)||0));$('wsu').checked=!!state.wsu;$('principal').checked=!!state.principal;
+  $('manualJob').value=['fitness','hair'].includes(state.job)?state.job:'';$('manualJobPoints').value=Math.max(0,Number(state.points)||0);
+  currentCode=valid.has(state.current)&&!completed.has(state.current)?state.current:null;
+  currentCourseEndsAt=currentCode&&Number.isFinite(Number(state.ends))&&Number(state.ends)>0?Number(state.ends):null;
   currentTimeLeft=currentCourseEndsAt?Math.max(0,(currentCourseEndsAt-Date.now())/1000):null;
  }
  function updateSummary(){
@@ -29,16 +29,42 @@
   const missing=COURSE_LIST.filter(([code])=>!completed.has(code)&&code!==currentCode&&!Number.isFinite(Number(courseDurations.get(code))));
   $('tcManualDurationNote').textContent=currentCode&&!currentCourseEndsAt?'Enter the remaining days for your current course to include it in the total estimate.':missing.length?'Duration data is unavailable for '+missing.length+' course(s). Time estimates cover known courses only.':'Offline base durations are included. Your merits, WSU and Principal perk reduce future courses; the current course uses the remaining time you enter.';
  }
- function recalculate(){seedDurations();updateMods();render();updateSummary();if(typeof v3ShellSync==='function')v3ShellSync();save()}
+ function syncManualDashboard(){
+  if(apiMode)return;
+  const total=COURSE_LIST.length,done=completed.size,pct=Math.round(done/total*100);
+  const set=(id,value)=>{if($(id))$(id).textContent=value};
+  const rec=v3Recommendations(),next=rec?.code||rec?.next||'—';
+  set('newStatus','Manual mode');set('newDiag','Using your saved manual progress. No API key required.');
+  set('mDone',done+' / '+total);set('sideCount',done+' / '+total);set('mPct',pct+'%');set('sidePct',pct+'%');set('mRemain',total-done);
+  set('mCurrent',currentCode||'—');set('tNow',currentCode||'—');set('mNext',next);set('tNext',next);
+  const finish=done===total?'Complete 🎉':currentCode&&!currentCourseEndsAt?'Enter current-course time':$('timeFinishDate').textContent;
+  set('mFinish',finish);set('tFinish',finish);set('sCurrent',$('timeTotalRemaining').textContent);
+  set('newAchievements',done+' courses completed · '+(total-done)+' remaining · '+pct+'% overall progress');
+  if($('mDoneBar'))$('mDoneBar').style.width=pct+'%';
+  document.querySelector('.sideProgress')?.style.setProperty('--sidepct',pct+'%');
+  for(const el of document.querySelectorAll('[data-degree-count]')){const list=DATA[el.dataset.degreeCount]||[],n=list.filter(([c])=>completed.has(c)).length;el.textContent=n+' / '+list.length;el.closest('.degree')?.style.setProperty('--pct',list.length?Math.round(n/list.length*100)+'%':'0%')}
+  set('v3JobReductionValue',$('jobPointEduValue').textContent);set('v3JobReductionDetail',$('jobPointEduDetail').textContent);
+ }
+ function recalculate(){seedDurations();updateMods();render();updateSummary();syncManualDashboard();save()}
+ function captureApi(){return {progress:snapshot(),durations:new Map(courseDurations),job:currentJobPointInfo,status:$('newStatus')?.textContent}}
+ function restoreApi(){
+  const state=apiSnapshot?.progress||{completed:[],merits:0,wsu:false,principal:false,current:null,ends:null};
+  completed.clear();for(const c of state.completed)completed.add(c);
+  $('merits').value=state.merits;$('wsu').checked=state.wsu;$('principal').checked=state.principal;
+  currentCode=state.current;currentCourseEndsAt=state.ends;currentTimeLeft=state.ends?Math.max(0,(state.ends-Date.now())/1000):null;
+  courseDurations=apiSnapshot?.durations||new Map();currentJobPointInfo=apiSnapshot?.job||null;
+  $('newStatus').textContent=apiSnapshot?.status||'Not connected';
+ }
+
  function setMode(mode,loadSaved=true){
-  if(mode==='api'&&!apiMode)save();
-  if(mode==='manual'&&apiMode&&loadSaved)restore();
+  if(mode==='api'&&!apiMode){save();restoreApi()}
+  if(mode==='manual'&&apiMode&&loadSaved){apiSnapshot=captureApi();restore()}
   tab(mode);document.body.classList.toggle('api-active',mode==='api');
   $('tcManualPanel').hidden=mode!=='manual';
   $('tcModeManual').setAttribute('aria-pressed',String(mode==='manual'));$('tcModeApi').setAttribute('aria-pressed',String(mode==='api'));
   const connection=$('newConnect')?.closest('section');if(connection)connection.hidden=mode==='manual';
   if(mode==='manual')recalculate();
-  else {if(saved){saved.mode='api';try{localStorage.setItem(STORE,JSON.stringify(saved))}catch{}}}
+  else {updateMods();v3ShellSync();renderV3JobReduction();$('tFinish').textContent=$('newStatus').textContent==='Connected'?$('timeFinishDate').textContent:'—';if(saved){saved.mode='api';try{localStorage.setItem(STORE,JSON.stringify(saved))}catch{}}}
  }
  document.addEventListener('DOMContentLoaded',()=>{
   const api=$('newConnect')?.closest('section');if(!api)return;
@@ -64,6 +90,13 @@
   $('tcManualClear').onclick=()=>{if(!confirm('Clear all manually completed courses?'))return;completed.clear();recalculate()};
   $('tcManualSearch').oninput=()=>{const q=$('tcManualSearch').value.trim().toLowerCase();for(const d of $('tcManualCourses').querySelectorAll('details')){let visible=0;for(const row of d.querySelectorAll('label')){row.hidden=!!q&&!row.dataset.search.includes(q);if(!row.hidden)visible++}d.hidden=!visible;if(q)d.open=true}};
   $('manualJob').options[1].textContent='Fitness Center (1 star or higher)';$('manualJob').options[2].textContent='Hair Salon (7 stars or higher)';
-  seedDurations();if(saved?.mode==='manual')setMode('manual');
+  // Keep all shell refresh paths aware of manual mode.
+  const shellSync=window.v3ShellSync;
+  window.v3ShellSync=function(){if(!apiMode){syncManualDashboard();return}return shellSync?.apply(this,arguments)};
+  const jobSync=window.renderV3JobReduction;
+  window.renderV3JobReduction=function(){if(!apiMode){syncManualDashboard();return}return jobSync?.apply(this,arguments)};
+  if(saved?.mode==='manual')setMode('manual');else $('tFinish').textContent='—';
+  setInterval(()=>{if(!apiMode){calculateTimes();syncManualDashboard()}},30000);
+
  });
 })();
