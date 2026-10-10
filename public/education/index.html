@@ -337,7 +337,7 @@ main{padding:0 8px 18px!important;max-width:1600px!important;width:100%!importan
 body:has(#v3CourseBrowser:not(.hidden)) #courseSearch,
 body:has(#v3CourseBrowser:not(.hidden)) .course-search,
 body:has(#v3CourseBrowser:not(.hidden)) .global-search{visibility:hidden!important}
-.v3-course-card{width:min(920px,96vw);max-height:88vh;overflow:auto;background:#0e1220;border:1px solid #6840a4;border-radius:16px;padding:16px;box-shadow:0 24px 80px #000}
+.v3-course-card{overflow-anchor:none;width:min(920px,96vw);max-height:88vh;overflow:auto;background:#0e1220;border:1px solid #6840a4;border-radius:16px;padding:16px;box-shadow:0 24px 80px #000}
 .v3-course-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;position:sticky;top:-16px;background:#0e1220;padding:10px 0;z-index:2}
 #v3CourseSearch.search{display:block!important;width:100%;margin:10px 0!important}
 .v3-course-key{margin:8px 0 10px}
@@ -1823,6 +1823,9 @@ syncWhatIfToCurrent();
     const list=(typeof DATA!=='undefined'&&DATA[degree])||[];
     const title=document.getElementById('v3CourseTitle'), summary=document.getElementById('v3CourseSummary'), rows=document.getElementById('v3CourseRows'), search=document.getElementById('v3CourseSearch');
     title.textContent=degree||'Courses';
+    const detail=document.getElementById('v3CourseDetail');
+    if(detail){detail.classList.add('hidden');rows.before(detail);}
+    activeDetailRow=null;
     rows.innerHTML='';
     const rec=recommendedCode();
     let doneCount=0;
@@ -1839,7 +1842,12 @@ syncWhatIfToCurrent();
       row.className='v3-course-row';
       row.dataset.search=(code+' '+name).toLowerCase();
       row.innerHTML=`<span class="v3-state">${icon}</span><div><b>${code}</b> — ${name}<div class="small muted">${unmet.length?'Needs: '+unmet.join(', '):state}</div></div><span class="small muted">${duration(code)}</span>`;
-      row.onclick=()=>openCourseDetail(code,name,state,unmet);
+      row.onclick=()=>openCourseDetail(code,name,state,unmet,row);
+      row.tabIndex=0;
+      row.setAttribute('role','button');
+      row.setAttribute('aria-controls','v3CourseDetail');
+      row.setAttribute('aria-expanded','false');
+      row.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();row.click();}};
       row.title='Click for course details';
       rows.appendChild(row);
     });
@@ -1854,6 +1862,11 @@ syncWhatIfToCurrent();
   document.getElementById('v3CourseSearch').addEventListener('input',function(){
     const q=this.value.trim().toLowerCase();
     document.querySelectorAll('#v3CourseRows .v3-course-row').forEach(r=>r.style.display=!q||r.dataset.search.includes(q)?'':'none');
+    if(activeDetailRow && activeDetailRow.style.display==='none'){
+      document.getElementById('v3CourseDetail').classList.add('hidden');
+      activeDetailRow.setAttribute('aria-expanded','false');
+      activeDetailRow=null;
+    }
   });
 
   document.querySelectorAll('.degree[data-degree]').forEach(card=>{
@@ -1941,7 +1954,8 @@ syncWhatIfToCurrent();
     DEF2760:{benefit:'3% passive bonus to Speed',why:'Permanent passive Speed bonus.'}
   }
 
-  function openCourseDetail(code,name,state,unmet){
+  let activeDetailRow=null, detailReturnScroll=0;
+  function openCourseDetail(code,name,state,unmet,row){
     const box=document.getElementById('v3CourseDetail');
     if(!box)return;
     const raw=courseDurations?.get?.(code);
@@ -1958,10 +1972,23 @@ syncWhatIfToCurrent();
     document.getElementById('v3DetailSource').textContent=hi?.source||(hi?'Official Torn Wiki / verified catalogue':'No highlighted perk verified yet');
     document.getElementById('v3DetailBenefit').textContent=hi?.benefit||'No verified highlighted gameplay unlock mapped yet.';
     document.getElementById('v3DetailWhy').textContent=hi?.why||'This course contributes toward its degree and overall education completion.';
+    const panel=modal.querySelector('.v3-course-card');
+    const top=row.getBoundingClientRect().top;
+    if(activeDetailRow)activeDetailRow.setAttribute('aria-expanded','false');
+    row.after(box);
     box.classList.remove('hidden');
-    box.scrollIntoView({behavior:'smooth',block:'nearest'});
+    // Keep the selected course in the same viewport position when moving an open panel.
+    panel.scrollTop+=row.getBoundingClientRect().top-top;
+    detailReturnScroll=panel.scrollTop;
+    activeDetailRow=row;
+    row.setAttribute('aria-expanded','true');
   }
-  document.getElementById('v3DetailClose').onclick=()=>document.getElementById('v3CourseDetail').classList.add('hidden');
+  document.getElementById('v3DetailClose').onclick=()=>{
+    document.getElementById('v3CourseDetail').classList.add('hidden');
+    modal.querySelector('.v3-course-card').scrollTop=detailReturnScroll;
+    if(activeDetailRow){activeDetailRow.setAttribute('aria-expanded','false');activeDetailRow.focus({preventScroll:true});}
+    activeDetailRow=null;
+  };
 
   window.openV3CourseBrowser=openCourseBrowser;
 })();
