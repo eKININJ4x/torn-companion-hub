@@ -124,7 +124,7 @@
       .card{min-height:auto}
     }
   </style>
-<script src="/shared-api.js" defer></script><link rel="stylesheet" href="/companion.css"></head>
+<script src="/shared-api.js" defer></script><link rel="stylesheet" href="/companion.css"><script src="/pda-install.js" defer></script></head>
 <body class="tc-page tc-hub" data-page="hub">
 <header><div class="tc-navbar"><div class="tc-nav-top"><a class="tc-nav-brand" href="/"><span class="tc-nav-mark">TC</span><span>Torn Companion</span></a><nav class="tc-mainnav" aria-label="Torn Companion tools"><a href="/" aria-current="page">Hub</a><a href="/education/">Education</a><a href="/armoury/">Armoury</a><a href="/payouts/">War Payouts</a><a href="/#install">TC OC</a></nav></div></div></header>
 
@@ -165,9 +165,8 @@
               <span class="pill">Auto updates</span>
             </div>
             <div class="card-actions">
-              <a class="btn primary" href="https://raw.githubusercontent.com/eKININJ4x/torn-oc-utility-manager/main/oc-utility-manager.user.js">Install userscript</a>
-              <a class="btn" href="https://github.com/eKININJ4x/torn-oc-utility-manager" target="_blank" rel="noreferrer">Source</a>
-            </div>
+              <a class="btn primary" href="https://raw.githubusercontent.com/eKININJ4x/torn-oc-utility-manager/main/oc-utility-manager.user.js">Install TC OC</a><details class="tc-pda-guide" style="width:100%;margin-top:12px"><summary style="cursor:pointer;font-weight:800;color:#d8b4fe">Set up TC OC in Torn PDA</summary><ol style="padding-left:20px;color:var(--muted);line-height:1.7"><li>Open Torn PDA → Settings → Advanced browser settings. Enable custom user scripts and open Manage scripts / Userscripts.</li><li>Open this hub inside Torn PDA’s built-in browser and tap <strong>Install TC OC</strong>. Accept the install prompt and ensure the script is enabled.</li><li>If no install prompt appears, use <strong>Copy script for Torn PDA</strong> below. In Manage scripts, tap +, paste the complete script and save it. Choose injection at End if the panel does not appear.</li><li>In Torn PDA’s browser, open Torn → Faction → Organised Crimes. Open the TC OC / OC Utility Manager button.</li><li>In TC OC, tap API key, enter your Torn key, then Save API key and Refresh. Private faction data requires the appropriate key permissions and Faction API Access for your faction role.</li></ol><p style="font-size:13px;color:var(--muted)">TC OC runs inside Torn and stores its own key. The hub’s shared key does not automatically transfer into Torn PDA’s userscript. Keep only one copy of TC OC enabled; reload the faction page after installing.</p><button class="btn" type="button" id="tcCopyPdaScript">Copy script for Torn PDA</button><p id="tcPdaCopyStatus" role="status" style="font-size:13px;color:var(--muted)"></p><textarea id="tcPdaScriptText" hidden readonly aria-label="TC OC script to copy" style="width:100%;min-height:140px"></textarea></details>
+              </div>
           </article>
 
           <article class="card">
@@ -186,8 +185,7 @@
             </div>
             <div class="card-actions">
               <a class="btn primary" href="/education/">Open Education Companion</a>
-              <a class="btn" href="https://github.com/eKININJ4x/torn-education-calculator" target="_blank" rel="noreferrer">Source</a>
-            </div>
+              </div>
             
           </article>
 
@@ -207,8 +205,7 @@
             </div>
             <div class="card-actions">
               <a class="btn primary" href="/armoury/">Open tool</a>
-              <a class="btn" href="https://github.com/eKININJ4x/Faction-Armoury-Tracker" target="_blank" rel="noreferrer">Source</a>
-            </div>
+              </div>
           </article>
 
           <article class="card">
@@ -226,8 +223,7 @@
             </div>
             <div class="card-actions">
               <a class="btn primary" href="/payouts/">Open War Payouts</a>
-              <a class="btn" href="https://github.com/eKININJ4x/btw-war-payout" target="_blank" rel="noreferrer">Source</a>
-            </div>
+              </div>
           </article>
 
           <article class="card wide">
