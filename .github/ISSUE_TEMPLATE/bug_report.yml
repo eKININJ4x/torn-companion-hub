@@ -1,0 +1,30 @@
+name: Report a bug
+description: Tell us what failed and how to reproduce it.
+title: '[Bug] '
+body:
+  - type: markdown
+    attributes:
+      value: Never include your Torn API key, credentials or private faction data. Redact screenshots before uploading.
+  - type: dropdown
+    id: tool
+    attributes:
+      label: Tool
+      options: [Hub / shared API, Education, Faction Armoury, War Payouts, TC OC / Torn PDA]
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps and result
+      description: What did you click, what happened, and what did you expect?
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Device and browser
+      placeholder: e.g. Android, Torn PDA version; or Windows, Chrome
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Redacted screenshots or error text

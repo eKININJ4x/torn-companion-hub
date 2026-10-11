@@ -1,0 +1,17 @@
+name: Suggest a feature
+description: Explain a problem you want Torn Companion to solve.
+title: '[Idea] '
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would this help you do?
+      description: Describe the task, the tool, and what is difficult today.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Suggested change
+    validations:
+      required: true

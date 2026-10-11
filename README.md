@@ -25,4 +25,10 @@ More tools can be added to the Hub over time.
 
 The hub serves the canonical TC OC userscript at `/scripts/tc-oc.user.js` with `text/javascript` headers for Torn PDA installation. Open the hub in Torn PDA and use the install button, then confirm in the app. Desktop installation and copy/paste fallback remain available.
 
-When releasing a new TC OC version, update this hosted copy from `eKININJ4x/torn-oc-utility-manager` along with the hub release. Preserve the canonical update/download metadata in the script.
+The Sync TC OC installer workflow checks the canonical repository hourly and can also be run manually. It mirrors only a newer version after header, faction match and JavaScript syntax validation. Update/download metadata remains canonical. A successful sync pushes the new installer to main for the existing Cloudflare deployment integration.
+
+## Stable releases and feedback
+
+The current stable hub version is recorded in `release-version.txt`; see `CHANGELOG.md`. The stable-release workflow publishes a GitHub release and tag for that recorded version without replacing existing releases. Hub versions are independent of Education and TC OC versions.
+
+Use the hub footer to report bugs or suggest features. Review and reproduce reports before planning the next feature batch; no new feature commitments are made in this release.
