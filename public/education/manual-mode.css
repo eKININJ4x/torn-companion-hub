@@ -3,3 +3,5 @@
 #tcManualPanel .search{display:block!important;position:static!important;inset:auto!important;width:100%!important}
 
 .tc-manual-heading{display:flex;align-items:center;gap:12px;min-width:0}.tc-manual-heading input{width:20px;height:20px;flex:0 0 20px;margin:0;accent-color:#1fe79a;cursor:pointer}.tc-manual-count{white-space:nowrap}
+
+#roadmapDialog .search{position:static!important;inset:auto!important;display:block!important;width:auto!important;flex:1;min-width:0}#roadmapDialog .roadmap-filters{display:flex;flex-wrap:wrap;gap:10px}

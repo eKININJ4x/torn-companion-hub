@@ -2,6 +2,7 @@
 (function(){
  'use strict';
  const STORE='tc:education:manual:v1';
+ const degreeLabel=degree=>{const code=DATA[degree]?.[0]?.[0]?.match(/^[A-Z]+/)?.[0];return code?'('+code+') '+degree:degree};
  const $=id=>document.getElementById(id);
  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let saved=null, apiSnapshot=null;
@@ -74,11 +75,17 @@
   api.after(panel);
   const modifiers=$('merits')?.closest('section');if(modifiers){modifiers.classList.remove('hidden');$('tcManualSettings').prepend(modifiers)}
   for(const [degree,courses] of Object.entries(DATA)){
-   const details=document.createElement('details');details.className='tc-manual-degree';details.innerHTML='<summary><span class="tc-manual-heading"><input type="checkbox" data-degree="'+esc(degree)+'" aria-label="Mark all '+esc(degree)+' courses completed"><span>'+esc(degree)+'</span></span><span class="tc-manual-count"></span></summary>';details.querySelector('input[data-degree]').addEventListener('click',e=>e.stopPropagation());
+   const details=document.createElement('details');details.className='tc-manual-degree';details.innerHTML='<summary><span class="tc-manual-heading"><input type="checkbox" data-degree="'+esc(degree)+'" aria-label="Mark all '+esc(degree)+' courses completed"><span>'+esc(degreeLabel(degree))+'</span></span><span class="tc-manual-count"></span></summary>';details.querySelector('input[data-degree]').addEventListener('click',e=>e.stopPropagation());
    for(const [code,name] of courses){const label=document.createElement('label');label.className='tc-manual-course';label.dataset.search=(code+' '+name).toLowerCase();label.innerHTML='<input type="checkbox" data-code="'+esc(code)+'"><span><b>'+esc(code)+'</b> — '+esc(name)+'</span>';details.appendChild(label);
     const option=document.createElement('option');option.value=code;option.textContent=code+' — '+name;$('tcManualCurrent').appendChild(option)}
    $('tcManualCourses').appendChild(details);
   }
+  // The sidebar must open the interactive dialog, rather than scroll to an old placeholder.
+  document.querySelectorAll('nav button[data-go="roadmap"]').forEach(button=>{button.onclick=()=>{document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));button.classList.add('active');openRoadmap('all')}});
+  document.querySelectorAll('.side-nav nav a[href="#roadmap"]').forEach(link=>{link.onclick=e=>{e.preventDefault();openRoadmap('all')}});
+  // Keep abbreviations derived from the actual course codes, while retaining internal degree names.
+  document.querySelectorAll('.degree[data-degree]').forEach(card=>{const title=card.querySelector('span');if(title)title.textContent=degreeLabel(card.dataset.degree)});
+  $('roadmapDegree')?.querySelectorAll('option').forEach(option=>{if(DATA[option.value])option.textContent=degreeLabel(option.value)});
   $('tcModeManual').onclick=()=>setMode('manual');$('tcModeApi').onclick=()=>setMode('api');
   // Connecting with a key explicitly returns to API mode.
   $('newConnect').addEventListener('click',()=>setMode('api'),true);
