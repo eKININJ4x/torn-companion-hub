@@ -80,6 +80,17 @@
     const option=document.createElement('option');option.value=code;option.textContent=code+' — '+name;$('tcManualCurrent').appendChild(option)}
    $('tcManualCourses').appendChild(details);
   }
+  // Reuse the existing selector so theme preferences and listeners stay intact.
+  const themeRow=$('themeSelect')?.closest('.theme-row');
+  if(themeRow){const topbar=document.createElement('div');topbar.className='tc-education-topbar';topbar.appendChild(themeRow);document.querySelector('main')?.prepend(topbar)}
+  const recommendationPanel=$('v3Stage6Result');
+  if(recommendationPanel){
+   const viewCourse=document.createElement('button');viewCourse.id='tcViewRecommendedCourse';viewCourse.type='button';viewCourse.className='btn';viewCourse.textContent='View recommended course';recommendationPanel.appendChild(viewCourse);
+   const recommended=()=>window.v3Stage6Recommendation?.();
+   const updateButton=()=>{const code=recommended()?.code;viewCourse.disabled=!code;viewCourse.hidden=!code};
+   viewCourse.onclick=()=>{const code=recommended()?.code;if(!code)return;const degree=Object.keys(DATA).find(d=>DATA[d].some(([c])=>c===code));if(!degree)return;window.openV3CourseBrowser(degree);const row=[...document.querySelectorAll('#v3CourseRows .v3-course-row')].find(r=>r.querySelector('b')?.textContent===code);if(row){row.click();row.scrollIntoView({block:'center'});row.focus({preventScroll:true})}};
+   new MutationObserver(updateButton).observe($('v3Stage6Title'),{childList:true,characterData:true,subtree:true});updateButton();
+  }
   // The sidebar must open the interactive dialog, rather than scroll to an old placeholder.
   document.querySelectorAll('nav button[data-go="roadmap"]').forEach(button=>{button.onclick=()=>{document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));button.classList.add('active');openRoadmap('all')}});
   document.querySelectorAll('.side-nav nav a[href="#roadmap"]').forEach(link=>{link.onclick=e=>{e.preventDefault();openRoadmap('all')}});
