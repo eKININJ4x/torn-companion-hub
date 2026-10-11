@@ -2,6 +2,15 @@
 (function(){
  'use strict';
  const STORE='tc:education:manual:v1';
+ // The legacy roadmap renderer expects catalogue maps that were never initialized.
+ window.catalogue=new Map();window.catalogueIdToCode=new Map();
+ const buildCatalogue=window.buildEducationMap;
+ window.buildEducationMap=function(data){
+  const result=buildCatalogue.apply(this,arguments);window.catalogueIdToCode=result.byId;window.catalogue=new Map();
+  const names=new Map(COURSE_LIST.map(([code,name])=>[normName(name),code]));
+  function visit(node){if(!node||typeof node!=='object')return;const text=[node.code,node.name,node.title,node.course].filter(Boolean).join(' ');const code=codeFromText(text)||names.get(normName(node.name||node.title||node.course));if(code)window.catalogue.set(code,node);Object.values(node).forEach(value=>{if(value&&typeof value==='object')visit(value)})}
+  visit(data);return result;
+ };
  const degreeLabel=degree=>{const code=DATA[degree]?.[0]?.[0]?.match(/^[A-Z]+/)?.[0];return code?'('+code+') '+degree:degree};
  const $=id=>document.getElementById(id);
  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -83,8 +92,13 @@
   // Reuse the existing selector so theme preferences and listeners stay intact.
   const themeRow=$('themeSelect')?.closest('.theme-row');
   if(themeRow){const topbar=document.createElement('div');topbar.className='tc-education-topbar';topbar.appendChild(themeRow);document.querySelector('main')?.prepend(topbar)}
+  const roadmapDialog=$('roadmapDialog');
+  if(roadmapDialog)document.body.appendChild(roadmapDialog);
   const recommendationPanel=$('v3Stage6Result');
   if(recommendationPanel){
+   $('next')?.appendChild(recommendationPanel);
+   const tornEducation=document.createElement('a');tornEducation.className='btn secondary tc-torn-education';tornEducation.href='https://www.torn.com/education.php';tornEducation.target='_blank';tornEducation.rel='noopener noreferrer';tornEducation.textContent='Open Torn Education ↗';
+   const educationLinks=document.createElement('div');educationLinks.className='tc-mode-buttons';educationLinks.appendChild(tornEducation);$('next')?.querySelector('.sectionHead')?.appendChild(educationLinks);
    const viewCourse=document.createElement('button');viewCourse.id='tcViewRecommendedCourse';viewCourse.type='button';viewCourse.className='btn';viewCourse.textContent='View recommended course';recommendationPanel.appendChild(viewCourse);
    const recommended=()=>window.v3Stage6Recommendation?.();
    const updateButton=()=>{const code=recommended()?.code;viewCourse.disabled=!code;viewCourse.hidden=!code};
