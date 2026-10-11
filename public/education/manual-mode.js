@@ -25,7 +25,7 @@
   for(const input of document.querySelectorAll('#tcManualCourses input[data-code]')){
    input.checked=completed.has(input.dataset.code);input.closest('label').classList.toggle('tc-done',input.checked);
   }
-  for(const details of document.querySelectorAll('#tcManualCourses details')){const codes=[...details.querySelectorAll('input[data-code]')].map(x=>x.dataset.code);details.querySelector('.tc-manual-count').textContent=codes.filter(c=>completed.has(c)).length+' / '+codes.length}
+  for(const details of document.querySelectorAll('#tcManualCourses details')){const codes=[...details.querySelectorAll('input[data-code]')].map(x=>x.dataset.code);const done=codes.filter(c=>completed.has(c)).length;details.querySelector('.tc-manual-count').textContent=done+' / '+codes.length;const group=details.querySelector('input[data-degree]');group.checked=done===codes.length;group.indeterminate=done>0&&done<codes.length}
   const missing=COURSE_LIST.filter(([code])=>!completed.has(code)&&code!==currentCode&&!Number.isFinite(Number(courseDurations.get(code))));
   $('tcManualDurationNote').textContent=currentCode&&!currentCourseEndsAt?'Enter the remaining days for your current course to include it in the total estimate.':missing.length?'Duration data is unavailable for '+missing.length+' course(s). Time estimates cover known courses only.':'Offline base durations are included. Your merits, WSU and Principal perk reduce future courses; the current course uses the remaining time you enter.';
  }
@@ -74,7 +74,7 @@
   api.after(panel);
   const modifiers=$('merits')?.closest('section');if(modifiers){modifiers.classList.remove('hidden');$('tcManualSettings').prepend(modifiers)}
   for(const [degree,courses] of Object.entries(DATA)){
-   const details=document.createElement('details');details.className='tc-manual-degree';details.innerHTML='<summary>'+esc(degree)+' <span class="tc-manual-count"></span></summary>';
+   const details=document.createElement('details');details.className='tc-manual-degree';details.innerHTML='<summary><span class="tc-manual-heading"><input type="checkbox" data-degree="'+esc(degree)+'" aria-label="Mark all '+esc(degree)+' courses completed"><span>'+esc(degree)+'</span></span><span class="tc-manual-count"></span></summary>';details.querySelector('input[data-degree]').addEventListener('click',e=>e.stopPropagation());
    for(const [code,name] of courses){const label=document.createElement('label');label.className='tc-manual-course';label.dataset.search=(code+' '+name).toLowerCase();label.innerHTML='<input type="checkbox" data-code="'+esc(code)+'"><span><b>'+esc(code)+'</b> — '+esc(name)+'</span>';details.appendChild(label);
     const option=document.createElement('option');option.value=code;option.textContent=code+' — '+name;$('tcManualCurrent').appendChild(option)}
    $('tcManualCourses').appendChild(details);
@@ -82,7 +82,7 @@
   $('tcModeManual').onclick=()=>setMode('manual');$('tcModeApi').onclick=()=>setMode('api');
   // Connecting with a key explicitly returns to API mode.
   $('newConnect').addEventListener('click',()=>setMode('api'),true);
-  $('tcManualCourses').addEventListener('change',e=>{const code=e.target.dataset.code;if(!code)return;e.target.checked?completed.add(code):completed.delete(code);if(code===currentCode&&e.target.checked){currentCode=null;currentCourseEndsAt=null;currentTimeLeft=null}recalculate()});
+  $('tcManualCourses').addEventListener('change',e=>{const degree=e.target.dataset.degree;const code=e.target.dataset.code;if(!code&&!degree)return;const codes=degree?(DATA[degree]||[]).map(([c])=>c):[code];for(const c of codes)e.target.checked?completed.add(c):completed.delete(c);if(codes.includes(currentCode)&&e.target.checked){currentCode=null;currentCourseEndsAt=null;currentTimeLeft=null}recalculate()});
   for(const id of ['merits','wsu','principal','manualJob','manualJobPoints'])$(id).addEventListener(id==='merits'||id==='manualJobPoints'?'input':'change',()=>{if(!apiMode)recalculate()});
   function activeCourse(){currentCode=$('tcManualCurrent').value||null;if(currentCode)completed.delete(currentCode);const input=$('tcManualDays').value,days=Number(input);currentCourseEndsAt=currentCode&&input!==''&&Number.isFinite(days)&&days>=0?Date.now()+days*86400000:null;currentTimeLeft=currentCourseEndsAt?Math.max(0,(currentCourseEndsAt-Date.now())/1000):null;recalculate()}
   $('tcManualCurrent').onchange=activeCourse;$('tcManualDays').onchange=activeCourse;
