@@ -67,25 +67,30 @@ async function tick(env){
 export default {
  async fetch(request,env){
   const url=new URL(request.url);
-  if(url.pathname==='/health'&&request.method==='GET')return json({service:'tc-market-background',ready:!!(env.WATCH_STATE&&env.TORN_API_KEY&&env.DISCORD_WEBHOOK_URL)});
-  if(!authorized(request,env))return json({error:'Unauthorized'},401);
+  const origin=request.headers.get('Origin');
+  const allowed=['https://torn-companion-hub.torn-companion.workers.dev'];
+  const cors=origin&&allowed.includes(origin)?{'access-control-allow-origin':origin,'access-control-allow-methods':'GET, PUT, OPTIONS','access-control-allow-headers':'Authorization, Content-Type','vary':'Origin'}:{};
+  if(request.method==='OPTIONS'&&url.pathname==='/admin/watchlist')return new Response(null,{status:204,headers:cors});
+  const send=(data,status=200)=>{const response=json(data,status);for(const [k,v] of Object.entries(cors))response.headers.set(k,v);return response};
+  if(url.pathname==='/health'&&request.method==='GET')return send({service:'tc-market-background',ready:!!(env.WATCH_STATE&&env.TORN_API_KEY&&env.DISCORD_WEBHOOK_URL)});
+  if(!authorized(request,env))return send({error:'Unauthorized'},401);
   if(url.pathname==='/admin/watchlist'&&request.method==='GET'){
    const watchlist=await env.WATCH_STATE.get('watchlist');
-   return json({watchlist:watchlist?JSON.parse(watchlist):[]});
+   return send({watchlist:watchlist?JSON.parse(watchlist):[]});
   }
   if(url.pathname==='/admin/watchlist'&&request.method==='PUT'){
    try{
     const body=await request.text();
-    if(body.length>4096)return json({error:'Payload too large'},413);
+    if(body.length>4096)return send({error:'Payload too large'},413);
     const list=validWatchlist(JSON.parse(body));
     await env.WATCH_STATE.put('watchlist',JSON.stringify(list));
     // Reset states when targets change or items are removed.
     const keys=await env.WATCH_STATE.list({prefix:'alert:'});
     for(const k of keys.keys){const id=Number(k.name.slice(6)),v=list.find(x=>x.id===id);const prev=await env.WATCH_STATE.get(k.name,{type:'json'});if(!v||v.target!==prev?.target)await env.WATCH_STATE.delete(k.name)}
-    return json({saved:true,count:list.length});
-   }catch(e){return json({error:String(e.message||e)},400)}
+    return send({saved:true,count:list.length});
+   }catch(e){return send({error:String(e.message||e)},400)}
   }
-  return json({error:'Not found'},404);
+  return send({error:'Not found'},404);
  },
  async scheduled(event,env,ctx){ctx.waitUntil(tick(env).then(result=>console.log(JSON.stringify(result))).catch(error=>console.error('Market monitoring:',error.message)))}
 };
