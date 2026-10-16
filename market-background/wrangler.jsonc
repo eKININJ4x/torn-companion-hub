@@ -5,6 +5,6 @@
   "compatibility_date": "2026-10-16",
   "triggers": { "crons": ["* * * * *"] },
   "kv_namespaces": [
-    { "binding": "WATCH_STATE", "id": "REPLACE_WITH_YOUR_KV_NAMESPACE_ID" }
+    { "binding": "WATCH_STATE", "id": "4db4556817114a9990ed4ec823f44ce7" }
   ]
 }
