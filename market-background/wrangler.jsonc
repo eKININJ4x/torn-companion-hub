@@ -1,0 +1,10 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "tc-market-background",
+  "main": "./src/index.js",
+  "compatibility_date": "2026-10-16",
+  "triggers": { "crons": ["* * * * *"] },
+  "kv_namespaces": [
+    { "binding": "WATCH_STATE", "id": "REPLACE_WITH_YOUR_KV_NAMESPACE_ID" }
+  ]
+}
