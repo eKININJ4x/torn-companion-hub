@@ -36,7 +36,7 @@ function money(v){return '$'+v.toLocaleString('en-US')}
 async function sendDiscord(env,id,price,target){
  const destination=new URL(env.DISCORD_WEBHOOK_URL);
  if(!(destination.protocol==='https:'&&['discord.com','discordapp.com'].includes(destination.hostname)&&destination.pathname.startsWith('/api/webhooks/')))throw Error('Invalid Discord webhook host.');
- const content='🔔 **Torn Companion market alert**\nItem #'+id+' has a listing at **'+money(price)+'** (watch price: '+money(target)+').\nOpen Torn to buy manually: https://www.torn.com/page.php?sid=ItemMarket#/market/view=search%26itemID='+id;
+ const content='🔔 **Torn Companion market alert**\nItem #'+id+' has a listing at **'+money(price)+'** (watch price: '+money(target)+').\nOpen Torn to buy manually: https://www.torn.com/page.php?sid=ItemMarket#/market/view=search&itemID='+id;
  const res=await fetch(destination.toString(),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({content,allowed_mentions:{parse:[]}})});
  if(!res.ok)throw Error('Discord HTTP '+res.status);
 }
