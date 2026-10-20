@@ -3,7 +3,34 @@
   "name": "torn-companion-hub",
   "compatibility_date": "2026-10-07",
   "assets": {
-    "directory": "./public"
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/api/*"
+    ]
   },
-  "previews": {}
+  "previews": {},
+  "main": "./src/worker.js",
+  "kv_namespaces": [
+    {
+      "binding": "FEEDBACK_STORE",
+      "id": "4db4556817114a9990ed4ec823f44ce7"
+    }
+  ],
+  "ratelimits": [
+    {
+      "name": "FEEDBACK_LIMIT",
+      "namespace_id": "20261020",
+      "simple": {
+        "limit": 3,
+        "period": 60
+      }
+    }
+  ],
+  "services": [
+    {
+      "binding": "FEEDBACK_ADMIN",
+      "service": "tc-market-background"
+    }
+  ]
 }

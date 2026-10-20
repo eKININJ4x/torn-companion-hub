@@ -64,3 +64,11 @@ Requirements v3.5.1 fixes the host reset that caused black labels and serif text
 ### Training & Stat Enhancers
 
 Available at `/training/`: energy value, gym/enhancer break-even, compounding stat goals, and selling-energy comparisons. Prices load directly from Torn API v2 using the hub shared key (`torn/items`, item market and points market). Five-minute refresh runs only while visible. Manual overrides and public cached quotes persist in browser storage; no API key is copied into calculator storage. Missing/failed quotes are identified and previous timestamps remain intact. No server or additional Worker is required.
+
+### Private feedback
+
+`/feedback/` accepts anonymous bug reports, suggestions and general feedback without a Torn API key. `/feedback/admin/` reads submissions using the existing `tc-market-background` Worker ADMIN_TOKEN. The hub verifies that token through a private service binding; it never stores tokens or forwards Torn credentials. Reports can be exported as JSON for review in ChatGPT (there is no automatic ChatGPT delivery).
+
+The hub now includes `src/worker.js` for `/api/feedback` only; static pages continue through ASSETS. FEEDBACK_STORE reuses the account's existing KV namespace with the isolated `feedback:v1:` prefix; it never lists or modifies market watchlist/alert keys. Feedback expires after 180 days. Rate limits (3 attempts/minute/location per IP key), a honeypot, same-origin checks, strict size/field validation and a basic pasted-credential check protect submissions. These are basic spam controls, not a CAPTCHA. Administrator requests are also rate limited. No raw IP, user agent, API key or admin token is written to feedback records.
+
+Cloudflare bindings are declared in wrangler.jsonc. No new secrets or Workers are required. Keep the existing background Worker's ADMIN_TOKEN configured; missing/invalid credentials fail closed. Public users cannot list feedback. The administrator inbox uses textContent for submitted text, supports paginated 50-report reads, and keeps the token only in tab memory. Exports include only loaded reports and are private files; share them deliberately.
