@@ -193,7 +193,7 @@ html[data-theme="light"] .badge{color:#6d28d9;background:#f3e8ff;border-color:#d
 <div class="stat"><span>Total Prize</span><strong id="totalPrize">$0</strong></div>
 <div class="stat"><span>Faction Keeps</span><strong id="factionKeeps">$0</strong></div>
 <div class="stat"><span>Member Pool</span><strong id="memberPool">$0</strong></div>
-<div class="stat"><span>Total Valid Hits</span><strong id="totalHits">267</strong></div>
+<div class="stat"><span>Eligible Payout Hits</span><strong id="totalHits">267</strong></div>
 <div class="stat"><span>Exact Value Per Hit</span><strong id="perHit">$0</strong></div>
 <div class="stat"><span>Reconciliation</span><strong id="reconcile">—</strong></div>
 </div>
@@ -202,15 +202,16 @@ html[data-theme="light"] .badge{color:#6d28d9;background:#f3e8ff;border-color:#d
 
 <section class="card">
 <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
-<div><h2 style="margin-bottom:4px">Member Payouts</h2><div class="muted">Only verified successful Ranked War hits are included.</div></div>
+<div><h2 style="margin-bottom:4px">Member Payouts</h2><div class="muted">Original successful war hits stay visible. Exclude hits outside agreed terms; payouts use the remaining eligible hits.</div></div>
 <div class="actions" style="margin-top:0"><button type="button" onclick="openFactionBank()">Open Faction Bank</button><button type="button" onclick="openNextFactionPayout()">Pay Next</button><button class="secondary" onclick="copyPayouts()">Copy Payouts</button>
 <label style="display:flex;align-items:center;gap:7px;font-size:.86rem;font-weight:700;cursor:pointer"><input id="autoMarkPaid" type="checkbox" onchange="saveAutoMarkPaid()"> Automatically mark Paid when Pay is clicked</label><button class="secondary" onclick="exportCSV()">Export CSV</button></div>
 </div>
+<p class="muted" style="font-size:.85rem">Set <strong>Excluded hits</strong> to the number that should not be paid (use the full count to exclude a member entirely). Changes recalculate all payouts and are saved on this device for this War ID. Paid flags are cleared for members whose payout changes; check any transfers already made.</p><div class="actions"><button class="secondary" type="button" onclick="resetHitExclusions()">Restore all war hits</button></div><p id="hitAdjustmentStatus" class="muted" role="status"></p>
 <div class="table-wrap">
 <table>
-<thead><tr><th>Member</th><th>Torn ID</th><th class="num">War Hits</th><th class="num">Payout</th><th class="num">Bank</th><th class="num">Paid</th></tr></thead>
+<thead><tr><th>Member</th><th>Torn ID</th><th class="num">Original hits</th><th class="num">Excluded hits</th><th class="num">Eligible hits</th><th class="num">Payout</th><th class="num">Bank</th><th class="num">Paid</th></tr></thead>
 <tbody id="payoutRows"></tbody>
-<tfoot><tr><td>Total</td><td></td><td class="num" id="tableHits">0</td><td class="num" id="tableTotal">$0</td><td></td><td></td></tr></tfoot>
+<tfoot><tr><td>Total</td><td></td><td class="num" id="originalTableHits">0</td><td class="num" id="excludedTableHits">0</td><td class="num" id="tableHits">0</td><td class="num" id="tableTotal">$0</td><td></td><td></td></tr></tfoot>
 </table>
 </div>
 <div class="payment-summary"><div>Paid: <strong id="paidCount">0 / 0</strong></div><div>Paid total: <strong id="paidTotal">$0</strong></div><div>Remaining: <strong id="remainingTotal">$0</strong></div></div>
@@ -225,7 +226,7 @@ html[data-theme="light"] .badge{color:#6d28d9;background:#f3e8ff;border-color:#d
 <p class="muted" style="font-size:.85rem">Whole-dollar payouts use a largest-remainder allocation so the member payouts add up exactly to the whole-dollar member pool.</p>
 </section>
 
-<footer><strong>Torn Companion</strong> · Ranked War Payouts · V2.3.0<br><span class="muted">Not affiliated with Torn or Chedburn Networks.</span></footer>
+<footer><strong>Torn Companion</strong> · Ranked War Payouts · V2.4.0<br><span class="muted">Not affiliated with Torn or Chedburn Networks.</span></footer>
 </main>
 <script>
 let members = [
@@ -259,18 +260,39 @@ let lastApiKey='';
 let paidMembers=new Set();
 let activeFactionId=null;
 let activeFactionName='';
+let hitExclusions={};
 
 
 function allocateWholeDollars(pool,totalHits){
   const wholePool=Math.round(pool);
-  const exact=members.map(m=>({...m,raw:wholePool*m.hits/totalHits}));
+  const exact=eligibleMembers().map(m=>({...m,raw:totalHits>0?wholePool*m.hits/totalHits:0}));
   const rows=exact.map(x=>({...x,payout:Math.floor(x.raw),fraction:x.raw-Math.floor(x.raw)}));
-  let remaining=wholePool-rows.reduce((s,x)=>s+x.payout,0);
+  let remaining=totalHits>0?wholePool-rows.reduce((s,x)=>s+x.payout,0):0;
   [...rows].sort((a,b)=>b.fraction-a.fraction || b.hits-a.hits || a.name.localeCompare(b.name))
     .slice(0,remaining).forEach(w=>{ const r=rows.find(x=>x.id===w.id); r.payout++; });
   return rows;
 }
 
+
+
+function hitExclusionKey(){const war=document.getElementById('warId').value;return war?'btwExcludedHitsWar:'+war:null;}
+function eligibleMembers(){return members.map(m=>{const n=Number(hitExclusions[m.id]||0),excluded=Number.isSafeInteger(n)?Math.max(0,Math.min(m.hits,n)):0;return {...m,originalHits:m.hits,excluded,hits:m.hits-excluded};});}
+function loadHitExclusions(){hitExclusions={};const key=hitExclusionKey();if(!key)return;try{const value=JSON.parse(localStorage.getItem(key)||'{}');if(value&&typeof value==='object'&&!Array.isArray(value)){for(const m of members){const n=value[m.id];if(Number.isSafeInteger(n)&&n>0)hitExclusions[m.id]=Math.min(m.hits,n);}}}catch{document.getElementById('hitAdjustmentStatus').textContent='Saved hit adjustments could not be read. Original hits are in use.';}}
+function saveHitExclusions(){const key=hitExclusionKey();if(!key)return false;try{localStorage.setItem(key,JSON.stringify(hitExclusions));return true;}catch{return false;}}
+function applyHitExclusion(id,field){
+ const member=members.find(m=>Number(m.id)===Number(id));if(!member)return;
+ const raw=field.value.trim(),value=Number(raw);
+ if(!/^\d+$/.test(raw)||!Number.isSafeInteger(value)||value<0||value>member.hits){field.value=hitExclusions[id]||0;document.getElementById('hitAdjustmentStatus').textContent='Enter a whole number from 0 to '+member.hits+' excluded hits for '+member.name+'.';return;}
+ if(value)hitExclusions[id]=value;else delete hitExclusions[id];
+ finishHitAdjustment();
+}
+function finishHitAdjustment(){
+ const before=new Map(lastRows.map(r=>[Number(r.id),r.payout]));const stored=saveHitExclusions();lastRows=[];calculate();
+ let cleared=0;for(const r of lastRows){if(before.has(Number(r.id))&&before.get(Number(r.id))!==r.payout&&paidMembers.delete(Number(r.id)))cleared++;}
+ if(cleared){savePaidState();}renderRows();saveWarHistory();
+ const removed=eligibleMembers().reduce((n,m)=>n+m.excluded,0);document.getElementById('hitAdjustmentStatus').textContent=removed+' hit(s) excluded from payouts. '+(stored?'Saved for this war on this device.':'Adjustments work on this page, but could not be saved.')+(cleared?' Paid flags cleared for '+cleared+' member(s) whose amount changed. Review any transfers already made.':'');
+}
+function resetHitExclusions(){if(!members.length)return;hitExclusions={};finishHitAdjustment();}
 
 function applyTheme(t){t=['system','dark','light'].includes(t)?t:'system';document.documentElement.setAttribute('data-theme',t);const e=document.getElementById('themeSelect');if(e)e.value=t;}
 function setTheme(t){localStorage.setItem('btwTheme',t);applyTheme(t);}
@@ -282,12 +304,12 @@ function loadCutPreference(){const v=localStorage.getItem(cutStorageKey());if(v!
 function paidStorageKey(){const war=document.getElementById('warId').value||document.getElementById('apiWarId').value||'unknown';return 'btwPaidWar:'+war;}
 function loadPaidState(){paidMembers=new Set();try{const a=JSON.parse(localStorage.getItem(paidStorageKey())||'[]');if(Array.isArray(a))a.forEach(x=>paidMembers.add(Number(x)));}catch(e){}}
 function savePaidState(){localStorage.setItem(paidStorageKey(),JSON.stringify([...paidMembers]));}
-function markAllPaid(){if(!lastRows.length)return;lastRows.forEach(r=>paidMembers.add(Number(r.id)));savePaidState();renderRows();saveWarHistory();}
+function markAllPaid(){if(!lastRows.length)return;lastRows.filter(r=>r.payout>0).forEach(r=>paidMembers.add(Number(r.id)));savePaidState();renderRows();saveWarHistory();}
 function clearPaid(){if(!lastRows.length)return;if(confirm('Clear all paid checkmarks for this war?')){paidMembers.clear();savePaidState();renderRows();saveWarHistory();}}
 function printPayoutReport(){if(!lastRows.length){alert('Load and calculate a war first.');return;}window.print();}
 function togglePaid(id,checked){id=Number(id);if(checked)paidMembers.add(id);else paidMembers.delete(id);savePaidState();renderRows();saveWarHistory();}
-function updatePaymentSummary(){const p=lastRows.filter(r=>paidMembers.has(Number(r.id))),paid=p.reduce((a,r)=>a+r.payout,0),total=lastRows.reduce((a,r)=>a+r.payout,0);document.getElementById('paidCount').textContent=`${p.length} / ${lastRows.length}`;document.getElementById('paidTotal').textContent=money0.format(paid);document.getElementById('remainingTotal').textContent=money0.format(Math.max(0,total-paid));
-const pct=lastRows.length?Math.round((p.length/lastRows.length)*100):0;
+function updatePaymentSummary(){const payable=lastRows.filter(r=>r.payout>0),p=payable.filter(r=>paidMembers.has(Number(r.id))),paid=p.reduce((a,r)=>a+r.payout,0),total=lastRows.reduce((a,r)=>a+r.payout,0);document.getElementById('paidCount').textContent=`${p.length} / ${payable.length}`;document.getElementById('paidTotal').textContent=money0.format(paid);document.getElementById('remainingTotal').textContent=money0.format(Math.max(0,total-paid));
+const pct=payable.length?Math.round((p.length/payable.length)*100):0;
 const bar=document.getElementById('paidProgress'),label=document.getElementById('paidPercent');
 if(bar)bar.style.width=pct+'%';if(label)label.textContent=pct+'% paid';}
 
@@ -578,8 +600,8 @@ function toggleWarBrowser(){const box=document.getElementById('warBrowser');if(b
 function loadFoundWar(id){if(!id)return;document.getElementById('apiWarId').value=id;setWarBrowserCollapsed(true);loadWarFromAPI();}
 function saveWarHistory(){
  const war=document.getElementById('warId').value;if(!war||!lastRows.length)return;
- const paid=lastRows.filter(r=>paidMembers.has(Number(r.id))).length;
- localStorage.setItem('btwWarHistory:'+war,JSON.stringify({warId:Number(war),savedAt:Date.now(),opponent:document.getElementById('sumOpponent')?.textContent||'',rewardValue:Number(document.getElementById('prize')?.value)||0,factionCut:Number(document.getElementById('cut')?.value)||0,memberPool:lastRows.reduce((a,r)=>a+r.payout,0),members:lastRows.length,paid,fullyPaid:paid===lastRows.length}));
+ const payable=lastRows.filter(r=>r.payout>0),paid=payable.filter(r=>paidMembers.has(Number(r.id))).length;
+ localStorage.setItem('btwWarHistory:'+war,JSON.stringify({warId:Number(war),savedAt:Date.now(),opponent:document.getElementById('sumOpponent')?.textContent||'',rewardValue:Number(document.getElementById('prize')?.value)||0,factionCut:Number(document.getElementById('cut')?.value)||0,memberPool:lastRows.reduce((a,r)=>a+r.payout,0),members:payable.length,paid,fullyPaid:payable.length>0&&paid===payable.length}));
 }
 
 async function loadWarFromAPI(){
@@ -670,6 +692,7 @@ async function loadWarFromAPI(){
 
     const total=members.reduce((sum,m)=>sum+m.hits,0);
     document.getElementById('warId').value=warId;
+    document.getElementById('hitAdjustmentStatus').textContent='';loadHitExclusions();
     const ws=document.getElementById('warSummary');
     if(ws){ws.style.display='block';document.getElementById('sumWar').textContent='#'+warId;document.getElementById('sumOpponent').textContent=opponent.name||('Faction '+opponent.id);document.getElementById('sumHits').textContent=total;document.getElementById('sumRewards').textContent=rewards.length?rewards.map(r=>`${r.qty}× ${r.name}`).join(', '):'None';}
     renderScoreGraph(ourFaction,opponent,info.war);
@@ -697,12 +720,12 @@ function calculate(){
   const prize=Number(prizeEl.value);
   const cut=Number(cutEl.value);
   if(document.getElementById('rememberCut').checked) saveCutPreference();
-  const totalHits=members.reduce((s,m)=>s+m.hits,0);
+  const totalHits=eligibleMembers().reduce((s,m)=>s+m.hits,0);
   if(!Number.isFinite(prize)||prize<0||!Number.isFinite(cut)||cut<0||cut>100){
     document.getElementById('status').textContent='Please enter a valid prize and a faction cut between 0% and 100%.';
     document.getElementById('status').className='warn'; return;
   }
-  const faction=prize*(cut/100), pool=prize-faction, perHit=pool/totalHits;
+  const faction=prize*(cut/100), pool=prize-faction, perHit=totalHits>0?pool/totalHits:0;
   lastRows=allocateWholeDollars(pool,totalHits);
   const paid=lastRows.reduce((s,r)=>s+r.payout,0);
   document.getElementById('totalPrize').textContent=money2.format(prize);
@@ -712,10 +735,13 @@ function calculate(){
   document.getElementById('perHit').textContent=money0.format(Math.round(perHit));
   document.getElementById('tableHits').textContent=totalHits.toLocaleString();
   document.getElementById('tableTotal').textContent=money0.format(paid);
-  document.getElementById('reconcile').textContent=money0.format(paid)+' paid';
+  document.getElementById('originalTableHits').textContent=members.reduce((n,m)=>n+m.hits,0).toLocaleString();
+  document.getElementById('excludedTableHits').textContent=eligibleMembers().reduce((n,m)=>n+m.excluded,0).toLocaleString();
+  document.getElementById('reconcile').textContent=totalHits>0?money0.format(paid)+' allocated':'Pool not allocated';
   document.getElementById('reconcile').className='good';
   document.getElementById('status').textContent=`War #${document.getElementById('warId').value||'—'} calculated with a ${cut.toFixed(2)}% faction cut.`;
   document.getElementById('status').className='good';
+  if(totalHits===0){document.getElementById('status').textContent='No eligible hits remain. No payouts allocated; restore some hits to distribute the member pool.';document.getElementById('status').className='warn';}
   renderRows();
 }
 
@@ -739,6 +765,7 @@ function factionBankPayoutUrl(id,amount){
 function openMemberFactionPayout(id){
   const row=lastRows.find(r=>Number(r.id)===Number(id));
   if(!row){alert('Calculate the payouts first.');return;}
+  if(row.payout<=0){alert('This member has no payable amount.');return;}
   // With `noopener`, some browsers intentionally return null even when the
   // new Torn tab opens successfully. Since this function only runs from a
   // direct Pay/Pay Next click, mark Paid based on the user's enabled setting.
@@ -753,18 +780,19 @@ function openMemberFactionPayout(id){
 }
 function openNextFactionPayout(){
   if(!lastRows.length){calculate();if(!lastRows.length)return;}
-  const row=lastRows.find(r=>!paidMembers.has(Number(r.id)));
-  if(!row){alert('All members are currently marked as paid.');return;}
+  const row=lastRows.find(r=>r.payout>0&&!paidMembers.has(Number(r.id)));
+  if(!row){alert('No unpaid payouts remain.');return;}
   openMemberFactionPayout(row.id);
 }
 function renderRows(){
-  document.getElementById('payoutRows').innerHTML=lastRows.map(r=>{const paid=paidMembers.has(Number(r.id));return `<tr class="${paid?'paid-row':''}"><td><strong>${esc(r.name)}</strong></td><td>${r.id}</td><td class="num">${r.hits}</td><td class="num"><strong>${money0.format(r.payout)}</strong></td><td class="num"><button class="secondary smallbtn" type="button" onclick="openMemberFactionPayout(${r.id})" ${paid?'disabled':''}>Pay</button></td><td class="num"><input class="paid-check" type="checkbox" ${paid?'checked':''} aria-label="Mark ${esc(r.name)} paid" onchange="togglePaid(${r.id},this.checked)"></td></tr>`;}).join('');
+  document.getElementById('payoutRows').innerHTML=lastRows.map(r=>{const paid=paidMembers.has(Number(r.id));return `<tr class="${paid?'paid-row':''}"><td><strong>${esc(r.name)}</strong></td><td>${r.id}</td><td class="num">${r.originalHits}</td><td class="num"><input type="number" inputmode="numeric" min="0" max="${r.originalHits}" step="1" value="${r.excluded}" style="width:85px" aria-label="Excluded hits for ${esc(r.name)}" onchange="applyHitExclusion(${r.id},this)"></td><td class="num">${r.hits}</td><td class="num"><strong>${money0.format(r.payout)}</strong></td><td class="num"><button class="secondary smallbtn" type="button" onclick="openMemberFactionPayout(${r.id})" ${paid||r.payout<=0?'disabled':''}>Pay</button></td><td class="num"><input class="paid-check" type="checkbox" ${r.payout<=0?'disabled':''} ${paid?'checked':''} aria-label="Mark ${esc(r.name)} paid" onchange="togglePaid(${r.id},this.checked)"></td></tr>`;}).join('');
   updatePaymentSummary();
 }
 function openFactionBank(){
   window.open('https://www.torn.com/factions.php?step=your#/tab=controls','_blank','noopener');
 }
 function clearAll(){
+  hitExclusions={};document.getElementById('hitAdjustmentStatus').textContent='';document.getElementById('originalTableHits').textContent='0';document.getElementById('excludedTableHits').textContent='0';
   members=[];
   lastRows=[];
   rewards=[];
@@ -793,13 +821,13 @@ function clearAll(){
 }
 async function copyPayouts(){
   if(!lastRows.length) calculate();
-  const text=lastRows.map(r=>`${r.name} [${r.id}] — ${r.hits} hits — ${money0.format(r.payout)}`).join('\n');
+  const text=lastRows.map(r=>`${r.name} [${r.id}] — ${r.hits} eligible hits (${r.originalHits} original, ${r.excluded} excluded) — ${money0.format(r.payout)}`).join('\n');
   try{await navigator.clipboard.writeText(text);document.getElementById('status').textContent='Payout list copied to clipboard.';document.getElementById('status').className='good';}
   catch{document.getElementById('status').textContent='Clipboard access was blocked by the browser.';document.getElementById('status').className='warn';}
 }
 function exportCSV(){
   if(!lastRows.length) calculate();
-  const lines=[['Member','Torn ID','War Hits','Payout'],...lastRows.map(r=>[r.name,r.id,r.hits,r.payout])];
+  const lines=[['Member','Torn ID','Original War Hits','Excluded Hits','Eligible Hits','Payout'],...lastRows.map(r=>[r.name,r.id,r.originalHits,r.excluded,r.hits,r.payout])];
   const csv=lines.map(row=>row.map(v=>`"${String(v).replaceAll('"','""')}"`).join(',')).join('\r\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`BTW-War-${document.getElementById('warId').value||'payout'}.csv`;a.click();URL.revokeObjectURL(a.href);
