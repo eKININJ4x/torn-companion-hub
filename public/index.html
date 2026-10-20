@@ -76,7 +76,8 @@
     .btn:hover{transform:translateY(-1px);border-color:#53647e}
     .btn.primary{background:linear-gradient(180deg,var(--purple2),var(--purple));border-color:#8b5cf6}
     .btn.ghost{background:transparent}
-    section{padding:34px 0 60px}
+    section{padding:34px 0 60px;scroll-margin-top:90px}
+    article[id],#api-settings{scroll-margin-top:90px}
     .section-head{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:18px}
     .section-head h2{margin:0;font-size:26px;letter-spacing:-.03em}
     .section-head p{margin:5px 0 0;color:var(--muted);font-size:14px}
@@ -126,7 +127,7 @@
   </style>
 <script src="/shared-api.js" defer></script><link rel="stylesheet" href="/companion.css"><script src="/pda-install.js" defer></script><script src="/oc-requirements-install.js" defer></script></head>
 <body class="tc-page tc-hub" data-page="hub">
-<header><div class="tc-navbar"><div class="tc-nav-top"><a class="tc-nav-brand" href="/"><span class="tc-nav-mark">TC</span><span>Torn Companion</span></a><nav class="tc-mainnav" aria-label="Torn Companion tools"><a href="/" aria-current="page">Hub</a><a href="/education/">Education</a><a href="/armoury/">Armoury</a><a href="/payouts/">War Payouts</a><a href="/#install">TC OC</a></nav></div></div></header>
+<header><div class="tc-navbar"><div class="tc-nav-top"><a class="tc-nav-brand" href="/"><span class="tc-nav-mark">TC</span><span>Torn Companion</span></a><nav class="tc-mainnav" aria-label="Torn Companion tools"><a href="/" aria-current="page">Hub</a><a href="/education/">Education</a><a href="/armoury/">Armoury</a><a href="/payouts/">War Payouts</a><a href="/#scripts">Scripts</a></nav></div></div></header>
 
   <main>
     <div class="shell hero tc-hero" style="--tc-art:url('/assets/hub-banner.webp')">
@@ -134,21 +135,21 @@
       <h1>Your companion.<br>Every step of Torn.</h1>
       <p>Useful faction and player tools with a consistent interface, mobile support and simple public access.</p>
       <div class="hero-actions">
-        <a class="btn primary" href="#tools">Explore tools</a>
-        <a class="btn ghost" href="#install">Install TC OC</a>
+        <a class="btn primary" href="#scripts">Explore scripts</a>
+        <a class="btn ghost" href="#tools">Open webpages</a>
       </div>
     </div>
 
-<section id="api-settings" style="padding:20px 0"><div class="shell"><article class="card" style="min-height:auto"><details id="tcApiDetails" open><summary style="cursor:pointer;font-size:22px;font-weight:800"><span>One API key for Torn Companion</span><span id="tcApiSummary" style="display:block;margin-top:7px;color:#9aa6bb;font-size:13px;font-weight:400">Expand to manage your API key</span></summary><div style="margin-top:18px"><p>Save your key here to use Education, Armoury and War Payouts. Your key is sent directly to Torn for API requests. Each tool checks its required permissions when loading; private faction data also depends on your faction role.</p><form id="tcKeyForm"><label for="tcKey" style="display:block;margin-bottom:8px;font-weight:700">Torn API key</label><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="tcKey" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your Torn API key" style="flex:1;min-width:180px;padding:12px;background:#0b1220;color:#eef2ff;border:1px solid #53647e;border-radius:8px"><button class="btn" type="button" id="tcShow">Show</button></div><label style="display:flex;align-items:center;gap:8px;margin:14px 0"><input type="checkbox" id="tcRemember">Remember in this browser</label><p style="font-size:13px">By default, the key is saved for this tab session. Remember keeps it available after closing your browser and across tabs. Use Clear key to remove it.</p><div class="card-actions"><button type="submit" class="btn primary" id="tcSave">Validate &amp; save key</button><button type="button" class="btn" id="tcClear">Clear key</button><a class="btn" href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener noreferrer">Get / manage a Torn key</a></div><p id="tcKeyState" role="status" aria-live="polite" style="margin:14px 0 0">No shared API key saved.</p></form></div></details></article></div></section>
-    <section id="tools">
+
+    <section id="scripts" aria-labelledby="scripts-heading">
       <div class="shell">
         <div class="section-head">
           <div>
-            <h2>Torn Companion tools</h2>
-            <p>The current collection, with more tools to come.</p>
+            <h2 id="scripts-heading">Scripts</h2>
+            <p>Install tools that run directly inside Torn with Tampermonkey or Torn PDA.</p>
           </div>
+          <a class="btn ghost" href="#tools">Browse webpages ↓</a>
         </div>
-
         <div class="grid">
           <article class="card" id="install">
             <img class="tool-art" src="/assets/hub-banner.webp" alt="" loading="lazy" decoding="async" width="1200" height="400">
@@ -169,6 +170,60 @@
               </div>
           </article>
 
+          <article class="card" id="oc-requirements">
+            <img class="tool-art" src="/assets/hub-banner.webp" alt="" loading="lazy" decoding="async" width="1200" height="400">
+            <div class="card-top">
+              <div class="icon" aria-hidden="true">📊</div>
+              <span class="status"><span class="dot"></span>Live</span>
+            </div>
+            <h3>OC Requirement Display</h3>
+            <p>See each role’s current CPR beside its configured minimum, such as <strong>84/60</strong>. Targets stay visible on occupied and empty OC 2.0 slots, whoever joins.</p>
+            <div class="meta">
+              <span class="pill">v3.2.2</span><span class="pill">33 crimes</span><span class="pill">Tampermonkey</span><span class="pill">Torn PDA</span><span class="pill">No API key</span><span class="pill">Auto updates</span>
+            </div>
+            <p style="font-size:13px">The minimums are configurable faction targets. Crimes without a custom target use 60; these are not official Torn entry requirements or guaranteed success rates.</p>
+            <div class="card-actions">
+              <a class="btn primary" href="https://raw.githubusercontent.com/eKININJ4x/torn-companion-hub/main/public/scripts/tc-oc-requirements.user.js">Install for Tampermonkey</a>
+              <a class="btn ghost" href="/scripts/tc-oc-requirements.user.js">Install in Torn PDA</a>
+            </div>
+            <details style="margin-top:18px">
+              <summary style="cursor:pointer;font-weight:800;color:#d8b4fe">Installation &amp; updates</summary>
+              <h4>Desktop / Tampermonkey</h4>
+              <ol style="padding-left:20px;color:var(--muted);line-height:1.7">
+                <li>With Tampermonkey installed and enabled, select <strong>Install for Tampermonkey</strong> and confirm the installation screen.</li>
+                <li>If you tested an earlier copy, replace or disable that copy so only one OC Requirement Display script is enabled.</li>
+                <li>Refresh Torn’s Faction → Organised Crimes page. Role values should now appear as current/minimum.</li>
+              </ol>
+              <h4>Torn PDA</h4>
+              <ol style="padding-left:20px;color:var(--muted);line-height:1.7">
+                <li>Enable custom user scripts in Torn PDA’s browser settings.</li>
+                <li>Open this hub inside Torn PDA’s built-in browser, tap <strong>Install in Torn PDA</strong>, then confirm and enable the script.</li>
+                <li>If no installation prompt appears, use <strong>Copy script</strong> below. Open Torn PDA’s Manage scripts / Userscripts, add a script, paste the complete code and save. Use End injection if requested.</li>
+                <li>Reload Torn’s Faction → Organised Crimes page inside Torn PDA. No API key is needed.</li>
+              </ol>
+              <p style="font-size:13px">This published version includes update and download links. Tampermonkey can check for updates automatically when enabled; in Torn PDA, use its script update/check control if available, or reinstall from this card. Manually pasted earlier test builds need this version installed once to receive the update links.</p>
+              <button class="btn" type="button" id="tcCopyOcRequirements">Copy script</button>
+              <p id="tcOcRequirementsCopyStatus" role="status" aria-live="polite" style="font-size:13px;color:var(--muted)"></p>
+              <textarea id="tcOcRequirementsScriptText" hidden readonly aria-label="OC Requirement Display script to copy" style="width:100%;min-height:160px"></textarea>
+            </details>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="tools" aria-labelledby="webpages-heading" style="border-top:1px solid var(--line)">
+      <div class="shell">
+        <div class="section-head">
+          <div>
+            <h2 id="webpages-heading">Webpages</h2>
+            <p>Open Torn Companion’s calculators, trackers and faction tools in your browser.</p>
+          </div>
+          <a class="btn ghost" href="#scripts">Back to scripts ↑</a>
+        </div>
+        <div id="api-settings" style="margin:0 0 24px">
+          <article class="card" style="min-height:auto"><details id="tcApiDetails" open><summary style="cursor:pointer;font-size:22px;font-weight:800"><span>One API key for Torn Companion</span><span id="tcApiSummary" style="display:block;margin-top:7px;color:#9aa6bb;font-size:13px;font-weight:400">Expand to manage your API key</span></summary><div style="margin-top:18px"><p>Save your key here to use Education, Armoury and War Payouts. Your key is sent directly to Torn for API requests. Each tool checks its required permissions when loading; private faction data also depends on your faction role.</p><form id="tcKeyForm"><label for="tcKey" style="display:block;margin-bottom:8px;font-weight:700">Torn API key</label><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="tcKey" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your Torn API key" style="flex:1;min-width:180px;padding:12px;background:#0b1220;color:#eef2ff;border:1px solid #53647e;border-radius:8px"><button class="btn" type="button" id="tcShow">Show</button></div><label style="display:flex;align-items:center;gap:8px;margin:14px 0"><input type="checkbox" id="tcRemember">Remember in this browser</label><p style="font-size:13px">By default, the key is saved for this tab session. Remember keeps it available after closing your browser and across tabs. Use Clear key to remove it.</p><div class="card-actions"><button type="submit" class="btn primary" id="tcSave">Validate &amp; save key</button><button type="button" class="btn" id="tcClear">Clear key</button><a class="btn" href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener noreferrer">Get / manage a Torn key</a></div><p id="tcKeyState" role="status" aria-live="polite" style="margin:14px 0 0">No shared API key saved.</p></form></div></details></article>
+        </div>
+        <div class="grid">
           <article class="card">
             <img class="tool-art" src="/assets/education-university.webp" alt="" loading="lazy" decoding="async" width="1200" height="400">
 <div class="card-top">
@@ -232,44 +287,6 @@
 <div class="meta"><span class="pill">Favourites</span><span class="pill">All items</span><span class="pill">Price alerts</span><span class="pill">Testing</span></div>
 <div class="card-actions"><a class="btn primary" href="/market/">Open Market Watcher</a></div>
 </article>
-
-          <article class="card" id="oc-requirements">
-            <img class="tool-art" src="/assets/hub-banner.webp" alt="" loading="lazy" decoding="async" width="1200" height="400">
-            <div class="card-top">
-              <div class="icon" aria-hidden="true">📊</div>
-              <span class="status"><span class="dot"></span>Live</span>
-            </div>
-            <h3>OC Requirement Display</h3>
-            <p>See each role’s current CPR beside its configured minimum, such as <strong>84/60</strong>. Targets stay visible on occupied and empty OC 2.0 slots, whoever joins.</p>
-            <div class="meta">
-              <span class="pill">v3.2.2</span><span class="pill">33 crimes</span><span class="pill">Tampermonkey</span><span class="pill">Torn PDA</span><span class="pill">No API key</span><span class="pill">Auto updates</span>
-            </div>
-            <p style="font-size:13px">The minimums are configurable faction targets. Crimes without a custom target use 60; these are not official Torn entry requirements or guaranteed success rates.</p>
-            <div class="card-actions">
-              <a class="btn primary" href="https://raw.githubusercontent.com/eKININJ4x/torn-companion-hub/main/public/scripts/tc-oc-requirements.user.js">Install for Tampermonkey</a>
-              <a class="btn ghost" href="/scripts/tc-oc-requirements.user.js">Install in Torn PDA</a>
-            </div>
-            <details style="margin-top:18px">
-              <summary style="cursor:pointer;font-weight:800;color:#d8b4fe">Installation &amp; updates</summary>
-              <h4>Desktop / Tampermonkey</h4>
-              <ol style="padding-left:20px;color:var(--muted);line-height:1.7">
-                <li>With Tampermonkey installed and enabled, select <strong>Install for Tampermonkey</strong> and confirm the installation screen.</li>
-                <li>If you tested an earlier copy, replace or disable that copy so only one OC Requirement Display script is enabled.</li>
-                <li>Refresh Torn’s Faction → Organised Crimes page. Role values should now appear as current/minimum.</li>
-              </ol>
-              <h4>Torn PDA</h4>
-              <ol style="padding-left:20px;color:var(--muted);line-height:1.7">
-                <li>Enable custom user scripts in Torn PDA’s browser settings.</li>
-                <li>Open this hub inside Torn PDA’s built-in browser, tap <strong>Install in Torn PDA</strong>, then confirm and enable the script.</li>
-                <li>If no installation prompt appears, use <strong>Copy script</strong> below. Open Torn PDA’s Manage scripts / Userscripts, add a script, paste the complete code and save. Use End injection if requested.</li>
-                <li>Reload Torn’s Faction → Organised Crimes page inside Torn PDA. No API key is needed.</li>
-              </ol>
-              <p style="font-size:13px">This published version includes update and download links. Tampermonkey can check for updates automatically when enabled; in Torn PDA, use its script update/check control if available, or reinstall from this card. Manually pasted earlier test builds need this version installed once to receive the update links.</p>
-              <button class="btn" type="button" id="tcCopyOcRequirements">Copy script</button>
-              <p id="tcOcRequirementsCopyStatus" role="status" aria-live="polite" style="font-size:13px;color:var(--muted)"></p>
-              <textarea id="tcOcRequirementsScriptText" hidden readonly aria-label="OC Requirement Display script to copy" style="width:100%;min-height:160px"></textarea>
-            </details>
-          </article>
 
           <article class="card wide">
             <div class="card-top">
