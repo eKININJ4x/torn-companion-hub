@@ -35,6 +35,14 @@ Use the hub footer to report bugs or suggest features. Review and reproduce repo
 
 ## OC Requirement Display
 
-The hub card at `/#oc-requirements` installs the public userscript for Tampermonkey or Torn PDA. Version 3.2.2 packages the tested 3.2.1 display logic with canonical update/download metadata. The userscript and metadata-only file are hosted under `public/scripts/tc-oc-requirements.*.js`. The update URLs point to these files on the repository's main branch. No API key is required.
+The hub card at `/#oc-requirements` installs the public userscript for Tampermonkey or Torn PDA. Version 3.3.0 adds a compact settings panel on Torn with crime-wide and role-specific target overrides saved locally between reloads and script updates. The userscript and metadata-only file are hosted under `public/scripts/tc-oc-requirements.*.js`. The update URLs point to these files on the repository's main branch. No API key is required.
 
 The catalogue covers 33 crimes. Existing custom targets remain; newly added crimes default to 60. These are faction targets, not official Torn minimums. Change the version in both files together for future releases. Desktop and PDA installation, duplicate-script handling and manual-copy fallback are documented on the card.
+
+### OC minimum settings (v3.3.0)
+
+Open **TC · OC minimums** on Torn's faction crime page. Choose a crime, set an optional crime-wide minimum and optional individual role overrides, then select **Save targets**. Role overrides take precedence over the crime-wide value, which takes precedence over the built-in table. Blank values inherit the existing targets; unknown targets still use 60. Reset this crime and Reset all stage changes until Save is selected. Targets must be whole numbers from 0 to 100.
+
+Settings are stored under the version-independent `tc.ocRequirementTargets.v1` key in Torn's local browser storage. They survive script updates and are separate for each browser/device and Torn origin. Clearing site data removes them. Storage and validation failures are shown in the panel. The script makes no API or network requests.
+
+The hub groups scripts above webpages, uses distinct SVG artwork for each userscript and consistent desktop/PDA install buttons. Market Watcher is marked Live following user verification.

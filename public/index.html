@@ -152,7 +152,7 @@
         </div>
         <div class="grid">
           <article class="card" id="install">
-            <img class="tool-art" src="/assets/hub-banner.webp" alt="" loading="lazy" decoding="async" width="1200" height="400">
+            <img class="tool-art" src="/assets/oc-utility-banner.svg" alt="" loading="lazy" decoding="async" width="1200" height="400">
 <div class="card-top">
               <div class="icon">🧰</div>
               <span class="status"><span class="dot"></span>Live</span>
@@ -166,12 +166,14 @@
               <span class="pill">Auto updates</span>
             </div>
             <div class="card-actions">
-              <a class="btn primary" href="/scripts/tc-oc.user.js">Install TC OC in Torn PDA</a><a class="btn ghost" href="https://raw.githubusercontent.com/eKININJ4x/torn-oc-utility-manager/main/oc-utility-manager.user.js">Install for desktop</a><p style="width:100%;font-size:13px;color:var(--muted)">For phone installation, open this hub inside Torn PDA’s built-in browser, tap Install TC OC in Torn PDA, then confirm and enable the script.</p><details class="tc-pda-guide" style="width:100%;margin-top:12px"><summary style="cursor:pointer;font-weight:800;color:#d8b4fe">Set up TC OC in Torn PDA</summary><ol style="padding-left:20px;color:var(--muted);line-height:1.7"><li>Open Torn PDA → Settings → Advanced browser settings. Enable custom user scripts and open Manage scripts / Userscripts.</li><li>Open this hub inside Torn PDA’s built-in browser and tap <strong>Install TC OC in Torn PDA</strong>. Torn PDA will open its script installation screen. Confirm installation and ensure the script is enabled.</li><li>If no install prompt appears, use <strong>Copy script for Torn PDA</strong> below. In Manage scripts, tap +, paste the complete script and save it. Choose injection at End if the panel does not appear.</li><li>In Torn PDA’s browser, open Torn → Faction → Organised Crimes. Open the TC OC / OC Utility Manager button.</li><li>In TC OC, tap API key, enter your Torn key, then Save API key and Refresh. Private faction data requires the appropriate key permissions and Faction API Access for your faction role.</li></ol><p style="font-size:13px;color:var(--muted)">TC OC runs inside Torn and stores its own key. The hub’s shared key does not automatically transfer into Torn PDA’s userscript. Keep only one copy of TC OC enabled; reload the faction page after installing.</p><button class="btn" type="button" id="tcCopyPdaScript">Copy script for Torn PDA</button><p id="tcPdaCopyStatus" role="status" style="font-size:13px;color:var(--muted)"></p><textarea id="tcPdaScriptText" hidden readonly aria-label="TC OC script to copy" style="width:100%;min-height:140px"></textarea></details>
-              </div>
+              <a class="btn primary" href="https://raw.githubusercontent.com/eKININJ4x/torn-oc-utility-manager/main/oc-utility-manager.user.js">Install for Tampermonkey</a>
+              <a class="btn ghost" href="/scripts/tc-oc.user.js">Install in Torn PDA</a>
+            </div>
+            <details class="tc-pda-guide" style="margin-top:18px"><summary style="cursor:pointer;font-weight:800;color:#d8b4fe">Installation &amp; updates</summary><h4>Desktop / Tampermonkey</h4><ol style="padding-left:20px;color:var(--muted);line-height:1.7"><li>With Tampermonkey installed and enabled, select <strong>Install for Tampermonkey</strong> and confirm installation.</li><li>Keep one copy of OC Utility Manager enabled, then reload Torn’s faction page. Its existing update links let Tampermonkey check for newer versions.</li></ol><h4>Torn PDA</h4><ol style="padding-left:20px;color:var(--muted);line-height:1.7"><li>Open Torn PDA → Settings → Advanced browser settings. Enable custom user scripts and open Manage scripts / Userscripts.</li><li>Open this hub inside Torn PDA’s built-in browser and tap <strong>Install in Torn PDA</strong>. Torn PDA will open its script installation screen. Confirm installation and ensure the script is enabled.</li><li>If no install prompt appears, use <strong>Copy script for Torn PDA</strong> below. In Manage scripts, tap +, paste the complete script and save it. Choose injection at End if the panel does not appear.</li><li>In Torn PDA’s browser, open Torn → Faction → Organised Crimes. Open the TC OC / OC Utility Manager button.</li><li>In TC OC, tap API key, enter your Torn key, then Save API key and Refresh. Private faction data requires the appropriate key permissions and Faction API Access for your faction role.</li></ol><p style="font-size:13px;color:var(--muted)">TC OC runs inside Torn and stores its own key. The hub’s shared key does not automatically transfer into Torn PDA’s userscript. Keep only one copy of TC OC enabled; reload the faction page after installing.</p><button class="btn" type="button" id="tcCopyPdaScript">Copy script for Torn PDA</button><p id="tcPdaCopyStatus" role="status" style="font-size:13px;color:var(--muted)"></p><textarea id="tcPdaScriptText" hidden readonly aria-label="TC OC script to copy" style="width:100%;min-height:140px"></textarea></details>
           </article>
 
           <article class="card" id="oc-requirements">
-            <img class="tool-art" src="/assets/hub-banner.webp" alt="" loading="lazy" decoding="async" width="1200" height="400">
+            <img class="tool-art" src="/assets/oc-requirements-banner.svg" alt="" loading="lazy" decoding="async" width="1200" height="400">
             <div class="card-top">
               <div class="icon" aria-hidden="true">📊</div>
               <span class="status"><span class="dot"></span>Live</span>
@@ -179,9 +181,9 @@
             <h3>OC Requirement Display</h3>
             <p>See each role’s current CPR beside its configured minimum, such as <strong>84/60</strong>. Targets stay visible on occupied and empty OC 2.0 slots, whoever joins.</p>
             <div class="meta">
-              <span class="pill">v3.2.2</span><span class="pill">33 crimes</span><span class="pill">Tampermonkey</span><span class="pill">Torn PDA</span><span class="pill">No API key</span><span class="pill">Auto updates</span>
+              <span class="pill">v3.3.0</span><span class="pill">33 crimes</span><span class="pill">Tampermonkey</span><span class="pill">Torn PDA</span><span class="pill">No API key</span><span class="pill">Editable minimums</span><span class="pill">Auto updates</span>
             </div>
-            <p style="font-size:13px">The minimums are configurable faction targets. Crimes without a custom target use 60; these are not official Torn entry requirements or guaranteed success rates.</p>
+            <p style="font-size:13px">Use <strong>TC · OC minimums</strong> on Torn’s crime page to edit targets by crime or role, then save. Your choices stay in this browser through script updates. Unknown targets use 60; these are faction targets, not official Torn entry requirements.</p>
             <div class="card-actions">
               <a class="btn primary" href="https://raw.githubusercontent.com/eKININJ4x/torn-companion-hub/main/public/scripts/tc-oc-requirements.user.js">Install for Tampermonkey</a>
               <a class="btn ghost" href="/scripts/tc-oc-requirements.user.js">Install in Torn PDA</a>
@@ -192,14 +194,14 @@
               <ol style="padding-left:20px;color:var(--muted);line-height:1.7">
                 <li>With Tampermonkey installed and enabled, select <strong>Install for Tampermonkey</strong> and confirm the installation screen.</li>
                 <li>If you tested an earlier copy, replace or disable that copy so only one OC Requirement Display script is enabled.</li>
-                <li>Refresh Torn’s Faction → Organised Crimes page. Role values should now appear as current/minimum.</li>
+                <li>Refresh Torn’s Faction → Organised Crimes page. Role values should now appear as current/minimum. Open <strong>TC · OC minimums</strong> at the bottom-right to change targets.</li>
               </ol>
-              <h4>Torn PDA</h4>
+              <h4>Change your minimums</h4><p style="font-size:13px">Choose a crime, optionally set a crime-wide minimum, then enter any role overrides. Blank roles inherit the crime-wide or built-in target. Select <strong>Save targets</strong> to apply your changes. Reset this crime or Reset all restores the built-in values after you save.</p><h4>Torn PDA</h4>
               <ol style="padding-left:20px;color:var(--muted);line-height:1.7">
                 <li>Enable custom user scripts in Torn PDA’s browser settings.</li>
                 <li>Open this hub inside Torn PDA’s built-in browser, tap <strong>Install in Torn PDA</strong>, then confirm and enable the script.</li>
                 <li>If no installation prompt appears, use <strong>Copy script</strong> below. Open Torn PDA’s Manage scripts / Userscripts, add a script, paste the complete code and save. Use End injection if requested.</li>
-                <li>Reload Torn’s Faction → Organised Crimes page inside Torn PDA. No API key is needed.</li>
+                <li>Reload Torn’s Faction → Organised Crimes page inside Torn PDA. No API key is needed. Use <strong>TC · OC minimums</strong> to change targets; settings are saved separately on each browser/device.</li>
               </ol>
               <p style="font-size:13px">This published version includes update and download links. Tampermonkey can check for updates automatically when enabled; in Torn PDA, use its script update/check control if available, or reinstall from this card. Manually pasted earlier test builds need this version installed once to receive the update links.</p>
               <button class="btn" type="button" id="tcCopyOcRequirements">Copy script</button>
@@ -282,9 +284,9 @@
           </article>
 
           <article class="card">
-<div class="card-top"><div class="icon">⭐</div><span class="status pending"><span class="dot"></span>Testing</span></div>
+<div class="card-top"><div class="icon">⭐</div><span class="status"><span class="dot"></span>Live</span></div>
 <h3>Item Market Watcher</h3><p>Search all Torn items, star favourites, check the latest Item Market listings, and set price alert thresholds while the page is open.</p>
-<div class="meta"><span class="pill">Favourites</span><span class="pill">All items</span><span class="pill">Price alerts</span><span class="pill">Testing</span></div>
+<div class="meta"><span class="pill">Favourites</span><span class="pill">All items</span><span class="pill">Price alerts</span><span class="pill">Live</span></div>
 <div class="card-actions"><a class="btn primary" href="/market/">Open Market Watcher</a></div>
 </article>
 
