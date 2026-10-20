@@ -1,3 +1,9 @@
+## Training & Stat Enhancers v1.0.0 — 2026-10-20
+
+- Added four training calculators based on the supplied energy/time/cost sheet, with configurable training inputs and compounding enhancer goals.
+- Added shared-key market quotes, five-minute visible-page refresh, manual price overrides, quote timestamps, and partial-failure handling.
+- Added a matching training banner and hub webpage card.
+
 # Torn Companion Hub changelog
 
 ## v1.0.0 — 11 October 2026

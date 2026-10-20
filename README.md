@@ -60,3 +60,7 @@ Saved positions use versioned, normalised coordinates, with an 8px viewport marg
 ### Menu readability and Market Watcher banner
 
 Requirements v3.5.1 fixes the host reset that caused black labels and serif text. Both script panels use explicit Arial text, high-contrast foreground/muted colours, matching dark surfaces, header typography, borders and buttons. The Requirements panel now has a fixed header with a separately scrolling body. TC OC v1.1.1 scopes label and control text styles against Torn's page CSS. Saved positions, colours, targets and API keys are unchanged. Market Watcher now has matching SVG banner artwork on its hub card and tool page.
+
+### Training & Stat Enhancers
+
+Available at `/training/`: energy value, gym/enhancer break-even, compounding stat goals, and selling-energy comparisons. Prices load directly from Torn API v2 using the hub shared key (`torn/items`, item market and points market). Five-minute refresh runs only while visible. Manual overrides and public cached quotes persist in browser storage; no API key is copied into calculator storage. Missing/failed quotes are identified and previous timestamps remain intact. No server or additional Worker is required.
