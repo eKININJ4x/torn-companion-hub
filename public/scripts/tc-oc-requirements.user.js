@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn OC Requirement Display
 // @namespace    torn-companion
-// @version      3.4.0
+// @version      3.5.0
 // @author       Torn Companion
 // @homepageURL  https://github.com/eKININJ4x/torn-companion-hub
 // @updateURL    https://raw.githubusercontent.com/eKININJ4x/torn-companion-hub/main/public/scripts/tc-oc-requirements.meta.js
@@ -261,9 +261,149 @@
     const storageKey = 'tc.ocRequirementTargets.v1';
     const rootId = 'tc-oc-target-settings';
     const appearanceKey = 'tc.ocRequirementAppearance.v1';
+    const positionKey = 'tc.ocRequirementPosition.v1';
+    let movement = null;
     const singletonKey = '__tcOCRequirementDisplay';
     const prior = window[singletonKey];
     if (prior && typeof prior.stop === 'function') prior.stop();
+
+    function makeMovableButton({ anchor, handle, read, write, panel, report }) {
+        const gap = 8;
+        const original = Object.fromEntries(['left', 'right', 'top', 'bottom'].map(key => [key, anchor.style[key]]));
+        let saved = null;
+        let active = null;
+        let disposed = false;
+        let touched = false;
+        let writes = Promise.resolve();
+        const view = () => ({
+            width: Math.min(window.innerWidth, document.documentElement.clientWidth || window.innerWidth),
+            height: Math.min(window.innerHeight, document.documentElement.clientHeight || window.innerHeight)
+        });
+        const clamp = (n, low, high) => Math.max(low, Math.min(Math.max(low, high), n));
+        const rect = () => anchor.getBoundingClientRect();
+        function placePanel() {
+            const box = panel?.();
+            if (!box || box.hidden) return;
+            const size = view();
+            box.style.maxWidth = Math.max(0, size.width - gap * 2) + 'px';
+            let bounds = box.getBoundingClientRect();
+            if (bounds.height > size.height - gap * 2) {
+                box.style.maxHeight = Math.max(60, size.height - gap * 2) + 'px';
+                bounds = box.getBoundingClientRect();
+            }
+            const button = rect();
+            const below = size.height - button.bottom - gap * 2;
+            const above = button.top - gap * 2;
+            const top = below >= bounds.height || below >= above ? button.bottom + gap : button.top - gap - bounds.height;
+            box.style.left = clamp(button.left, gap, size.width - bounds.width - gap) + 'px';
+            box.style.top = clamp(top, gap, size.height - bounds.height - gap) + 'px';
+            box.style.right = 'auto'; box.style.bottom = 'auto';
+        }
+        function move(left, top) {
+            const size = view(), bounds = rect();
+            anchor.style.left = Math.round(clamp(left, gap, size.width - bounds.width - gap) * 100) / 100 + 'px';
+            anchor.style.top = Math.round(clamp(top, gap, size.height - bounds.height - gap) * 100) / 100 + 'px';
+            anchor.style.right = 'auto'; anchor.style.bottom = 'auto';
+            placePanel();
+        }
+        function restore() {
+            if (!saved) {
+                for (const [key, value] of Object.entries(original)) anchor.style[key] = value;
+                const bounds = rect(); move(bounds.left, bounds.top);
+            } else {
+                const size = view(), bounds = rect();
+                move(gap + saved.x * Math.max(0, size.width - bounds.width - gap * 2),
+                    gap + saved.y * Math.max(0, size.height - bounds.height - gap * 2));
+            }
+        }
+        function persist(value) {
+            writes = writes.then(async () => {
+                if (disposed) return false;
+                try { await write(value); report?.('Button position saved.'); return true; }
+                catch { report?.('Moved for this page, but the position could not be saved.'); return false; }
+            });
+            return writes;
+        }
+        function remember() {
+            const size = view(), bounds = rect();
+            saved = {
+                version: 1,
+                x: clamp((bounds.left - gap) / Math.max(1, size.width - bounds.width - gap * 2), 0, 1),
+                y: clamp((bounds.top - gap) / Math.max(1, size.height - bounds.height - gap * 2), 0, 1)
+            };
+            return persist(JSON.stringify(saved));
+        }
+        function release() {
+            const id = active?.id; active = null;
+            try { if (id !== undefined) handle.releasePointerCapture?.(id); } catch {}
+            handle.style.cursor = 'grab';
+        }
+        function cancel() { if (active) { release(); restore(); } }
+        function down(event) {
+            if (event.button !== 0 || active) return;
+            touched = true;
+            event.preventDefault(); event.stopPropagation();
+            const bounds = rect();
+            active = { id: event.pointerId, x: event.clientX, y: event.clientY, left: bounds.left, top: bounds.top, moved: false };
+            handle.focus({ preventScroll: true }); handle.style.cursor = 'grabbing';
+            try { handle.setPointerCapture?.(event.pointerId); } catch {}
+        }
+        function pointerMove(event) {
+            if (!active || event.pointerId !== active.id) return;
+            const dx = event.clientX - active.x, dy = event.clientY - active.y;
+            if (!active.moved && Math.hypot(dx, dy) < 4) return;
+            active.moved = true; event.preventDefault();
+            move(active.left + dx, active.top + dy);
+        }
+        function up(event) {
+            if (!active || event.pointerId !== active.id) return;
+            const moved = active.moved; release();
+            if (moved) remember();
+        }
+        function key(event) {
+            const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+            if (!arrows[event.key]) return;
+            touched = true; event.preventDefault(); event.stopPropagation();
+            const bounds = rect(), step = event.shiftKey ? 10 : 2, [x, y] = arrows[event.key];
+            move(bounds.left + x * step, bounds.top + y * step); remember();
+        }
+        function click(event) { event.preventDefault(); event.stopPropagation(); }
+        function resize() { cancel(); restore(); }
+        handle.addEventListener('pointerdown', down);
+        handle.addEventListener('keydown', key);
+        handle.addEventListener('click', click);
+        handle.addEventListener('lostpointercapture', cancel);
+        window.addEventListener('pointermove', pointerMove, { passive: false });
+        window.addEventListener('pointerup', up);
+        window.addEventListener('pointercancel', cancel);
+        window.addEventListener('blur', cancel);
+        window.addEventListener('resize', resize);
+        restore();
+        const ready = Promise.resolve().then(read).then(value => {
+            if (disposed || touched) return;
+            const parsed = typeof value === 'string' ? JSON.parse(value || 'null') : value;
+            if (parsed?.version === 1 && [parsed.x, parsed.y].every(n => typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 1)) saved = parsed;
+            restore();
+        }).catch(() => { if (!disposed && !touched) restore(); });
+        return {
+            ready, placePanel, reflow() { if (!active) restore(); },
+            async reset() {
+                if (disposed) return false;
+                cancel(); touched = true; saved = null; restore();
+                const ok = await persist('');
+                if (ok) report?.('Default button position restored.');
+                return ok;
+            },
+            stop() {
+                cancel(); disposed = true;
+                handle.removeEventListener('pointerdown', down); handle.removeEventListener('keydown', key);
+                handle.removeEventListener('click', click); handle.removeEventListener('lostpointercapture', cancel);
+                window.removeEventListener('pointermove', pointerMove); window.removeEventListener('pointerup', up);
+                window.removeEventListener('pointercancel', cancel); window.removeEventListener('blur', cancel);
+                window.removeEventListener('resize', resize);
+            }
+        };
+    }
 
     function clean(value) {
         return String(value).normalize('NFD')
@@ -413,6 +553,7 @@
         shadow.getElementById('panel').hidden = !open;
         shadow.getElementById('toggle').setAttribute('aria-expanded', String(open));
         if (open) {
+            movement?.placePanel();
             shadow.getElementById('crime').focus();
         } else {
             shadow.getElementById('toggle').focus();
@@ -431,12 +572,13 @@
           button{border:1px solid #66527f;border-radius:9px;padding:9px 12px;background:#261c37;color:#f4efff}
           button:hover{background:#3b2855}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #c699ff;outline-offset:2px}
           #toggle{font:700 14px/1.2 Arial,sans-serif;display:block;margin-left:auto;background:#6522a8;box-shadow:0 4px 18px #0005;font-weight:700}
-          #panel{width:min(390px,calc(100vw - 24px));max-height:min(640px,calc(100dvh - 160px - env(safe-area-inset-bottom, 0px)));overflow:auto;margin-bottom:8px;padding:18px;border:1px solid #71528c;border-radius:14px;background:#11101c;box-shadow:0 12px 44px #0008}
+          #panel{position:fixed;width:min(390px,calc(100vw - 24px));max-height:min(640px,calc(100dvh - 24px));overflow:auto;margin:0;padding:18px;border:1px solid #71528c;border-radius:14px;background:#11101c;box-shadow:0 12px 44px #0008}
           .top{display:flex;align-items:center;justify-content:space-between;gap:8px}h2{font-size:18px;margin:0}p{color:#c3b6d4;font-size:12px;margin:8px 0 15px}.close{font-size:18px;padding:2px 9px}
           label{display:block;font-weight:600}select,input{border:1px solid #68577d;border-radius:8px;background:#1b1529;color:#f4efff;padding:9px;width:100%;margin-top:6px}input{min-width:0}
           .crime-default{margin:16px 0}small{display:block;font-size:11px;color:#b5a5c8;font-weight:400}
           #roles{border-top:1px solid #3c304c}.role{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #30263e;font-size:13px}.role input{width:84px;margin:0;flex-shrink:0}input::placeholder{color:#aaa0b9;opacity:1}
           .actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:16px}.primary{background:#7227bf;border-color:#a872e0;font-weight:700}#status{margin:12px 0 0;min-height:18px;color:#dcc4ff}
+          #launcher{display:flex;align-items:center;justify-content:flex-end;gap:6px}.drag-handle{cursor:grab;touch-action:none;user-select:none;font:700 20px/1 Arial,sans-serif;padding:9px 7px}
           .colour-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}input[type="color"]{height:42px;padding:4px}.preview{display:inline-block;border-radius:999px;padding:10px 13px;font:700 14px/1.2 Arial,sans-serif}
           @media(max-width:700px){#toggle{font-size:clamp(11px,3vw,13px)}}
           @media(max-width:400px){#panel{padding:14px}.actions button{flex:1 1 auto}}
@@ -466,8 +608,14 @@
               <p id="appearance-status" role="status" aria-live="polite"></p>
             </form>
           </details>
+          <details style="border-top:1px solid #3c304c;margin-top:16px;padding-top:12px">
+            <summary style="cursor:pointer;font-weight:700">Button position</summary>
+            <p>Drag the dotted handle beside the button with a mouse or finger. With the handle focused, arrow keys move it; hold Shift for larger steps. Position is saved for this browser and adapts to screen size.</p>
+            <button type="button" id="reset-position">Reset position</button>
+            <p id="position-status" role="status" aria-live="polite"></p>
+          </details>
         </section>
-        <button id="toggle" type="button" aria-expanded="false" aria-controls="panel">TC · OC minimums</button>`;
+        <div id="launcher"><button id="toggle" type="button" aria-expanded="false" aria-controls="panel">TC · OC minimums</button><button id="drag-handle" class="drag-handle" type="button" aria-label="Move OC minimums button" title="Drag to move. Arrow keys move; Shift moves faster.">⠿</button></div>`;
         const background = shadow.getElementById('button-background');
         const foreground = shadow.getElementById('button-text');
         const preview = shadow.getElementById('button-preview');
@@ -530,11 +678,20 @@
         shadow.getElementById('close').addEventListener('click', () => openPanel(false));
         shadow.addEventListener('keydown', event => { if (event.key === 'Escape' && panelOpen) { event.preventDefault(); openPanel(false); } });
         document.body.appendChild(root); renderFields(); message(loadMessage);
+        movement = makeMovableButton({
+            anchor: root, handle: shadow.getElementById('drag-handle'),
+            read: () => localStorage.getItem(positionKey),
+            write: value => localStorage.setItem(positionKey, value),
+            panel: () => shadow.getElementById('panel'),
+            report: text => { shadow.getElementById('position-status').textContent = text; }
+        });
+        shadow.getElementById('reset-position').addEventListener('click', () => movement.reset());
+        shadow.addEventListener('toggle', () => movement.placePanel(), true);
     }
     function refresh() {
         const headers = document.querySelectorAll('button[class*="slotHeader___"]');
         const onCrimes = headers.length > 0 || /crimes/i.test(location.hash);
-        if (onCrimes) { makeSettings(); root.style.display = 'block'; }
+        if (onCrimes) { makeSettings(); const wasHidden = root.style.display === 'none'; root.style.display = 'block'; if (wasHidden) movement?.reflow(); movement?.placePanel(); }
         else if (root) root.style.display = 'none';
         const active = new Set();
         for (const header of headers) {
@@ -566,5 +723,5 @@
     }
     refresh();
     const interval = setInterval(refresh, 1500);
-    window[singletonKey] = { stop() { clearInterval(interval); displayed.forEach(node => node.remove()); root?.remove(); } };
+    window[singletonKey] = { stop() { movement?.stop(); clearInterval(interval); displayed.forEach(node => node.remove()); root?.remove(); } };
 })();
