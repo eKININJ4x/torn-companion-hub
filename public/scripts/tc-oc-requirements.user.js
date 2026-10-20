@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn OC Requirement Display
 // @namespace    torn-companion
-// @version      3.3.1
+// @version      3.4.0
 // @author       Torn Companion
 // @homepageURL  https://github.com/eKININJ4x/torn-companion-hub
 // @updateURL    https://raw.githubusercontent.com/eKININJ4x/torn-companion-hub/main/public/scripts/tc-oc-requirements.meta.js
@@ -260,6 +260,7 @@
     };
     const storageKey = 'tc.ocRequirementTargets.v1';
     const rootId = 'tc-oc-target-settings';
+    const appearanceKey = 'tc.ocRequirementAppearance.v1';
     const singletonKey = '__tcOCRequirementDisplay';
     const prior = window[singletonKey];
     if (prior && typeof prior.stop === 'function') prior.stop();
@@ -313,6 +314,17 @@
             loadMessage = 'Saved settings could not be read. Built-in targets are active. Saving will replace the unreadable settings.';
             return freshSettings();
         }
+    }
+    function readAppearance() {
+        try {
+            const saved = JSON.parse(localStorage.getItem(appearanceKey) || 'null');
+            return saved && /^#[0-9a-f]{6}$/i.test(saved.background) && /^#[0-9a-f]{6}$/i.test(saved.text) ? saved : null;
+        } catch { return null; }
+    }
+    let appearance = readAppearance();
+    function paintAppearance(element, colours) {
+        element.style.background = colours?.background || 'linear-gradient(180deg,#a855f7,#7c3aed)';
+        element.style.color = colours?.text || '#ffffff';
     }
     let settings = readSettings();
     let draft = JSON.parse(JSON.stringify(settings));
@@ -413,18 +425,20 @@
         shadow = root.attachShadow({ mode: 'open' });
         shadow.innerHTML = `
         <style>
-          :host{color-scheme:dark;font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;color:#f4efff}
+          :host{color-scheme:dark;font:14px/1.5 Arial,sans-serif;color:#f4efff}
           *{box-sizing:border-box} [hidden]{display:none!important}
           button,input,select{font:inherit}button{cursor:pointer}
           button{border:1px solid #66527f;border-radius:9px;padding:9px 12px;background:#261c37;color:#f4efff}
           button:hover{background:#3b2855}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #c699ff;outline-offset:2px}
-          #toggle{display:block;margin-left:auto;background:#6522a8;box-shadow:0 4px 18px #0005;font-weight:700}
+          #toggle{font:700 14px/1.2 Arial,sans-serif;display:block;margin-left:auto;background:#6522a8;box-shadow:0 4px 18px #0005;font-weight:700}
           #panel{width:min(390px,calc(100vw - 24px));max-height:min(640px,calc(100dvh - 160px - env(safe-area-inset-bottom, 0px)));overflow:auto;margin-bottom:8px;padding:18px;border:1px solid #71528c;border-radius:14px;background:#11101c;box-shadow:0 12px 44px #0008}
           .top{display:flex;align-items:center;justify-content:space-between;gap:8px}h2{font-size:18px;margin:0}p{color:#c3b6d4;font-size:12px;margin:8px 0 15px}.close{font-size:18px;padding:2px 9px}
           label{display:block;font-weight:600}select,input{border:1px solid #68577d;border-radius:8px;background:#1b1529;color:#f4efff;padding:9px;width:100%;margin-top:6px}input{min-width:0}
           .crime-default{margin:16px 0}small{display:block;font-size:11px;color:#b5a5c8;font-weight:400}
           #roles{border-top:1px solid #3c304c}.role{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #30263e;font-size:13px}.role input{width:84px;margin:0;flex-shrink:0}input::placeholder{color:#aaa0b9;opacity:1}
           .actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:16px}.primary{background:#7227bf;border-color:#a872e0;font-weight:700}#status{margin:12px 0 0;min-height:18px;color:#dcc4ff}
+          .colour-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}input[type="color"]{height:42px;padding:4px}.preview{display:inline-block;border-radius:999px;padding:10px 13px;font:700 14px/1.2 Arial,sans-serif}
+          @media(max-width:700px){#toggle{font-size:clamp(11px,3vw,13px)}}
           @media(max-width:400px){#panel{padding:14px}.actions button{flex:1 1 auto}}
           @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
         </style>
@@ -439,8 +453,52 @@
             <div class="actions"><button class="primary" type="submit">Save targets</button><button type="button" id="reset-crime">Reset this crime</button><button type="button" id="reset-all">Reset all</button></div>
           </form>
           <p id="status" role="status" aria-live="polite"></p>
+          <details style="border-top:1px solid #3c304c;margin-top:16px;padding-top:12px">
+            <summary style="cursor:pointer;font-weight:700">Button colours</summary>
+            <p>Choose background and text colours for your OC minimums button. Saved choices survive script updates in this browser.</p>
+            <form id="appearance-form">
+              <div class="colour-grid">
+                <label for="button-background">Background<input type="color" id="button-background"></label>
+                <label for="button-text">Text<input type="color" id="button-text"></label>
+              </div>
+              <p style="margin:12px 0 6px">Preview</p><span class="preview" id="button-preview">TC · OC minimums</span>
+              <div class="actions"><button class="primary" type="submit">Save colours</button><button type="button" id="reset-colours">Reset colours</button></div>
+              <p id="appearance-status" role="status" aria-live="polite"></p>
+            </form>
+          </details>
         </section>
         <button id="toggle" type="button" aria-expanded="false" aria-controls="panel">TC · OC minimums</button>`;
+        const background = shadow.getElementById('button-background');
+        const foreground = shadow.getElementById('button-text');
+        const preview = shadow.getElementById('button-preview');
+        const appearanceStatus = shadow.getElementById('appearance-status');
+        background.value = appearance?.background || '#7c3aed';
+        foreground.value = appearance?.text || '#ffffff';
+        paintAppearance(preview, appearance);
+        paintAppearance(shadow.getElementById('toggle'), appearance);
+        const chosenColours = () => ({ background: background.value, text: foreground.value });
+        for (const input of [background, foreground]) input.addEventListener('input', () => {
+            paintAppearance(preview, chosenColours());
+            appearanceStatus.textContent = 'Preview only. Save colours to apply.';
+        });
+        shadow.getElementById('appearance-form').addEventListener('submit', event => {
+            event.preventDefault();
+            try {
+                const chosen = chosenColours();
+                localStorage.setItem(appearanceKey, JSON.stringify(chosen));
+                appearance = chosen;
+                paintAppearance(shadow.getElementById('toggle'), appearance);
+                appearanceStatus.textContent = 'Button colours saved.';
+            } catch { appearanceStatus.textContent = 'Could not save colours. Your saved colours have not changed.'; }
+        });
+        shadow.getElementById('reset-colours').addEventListener('click', () => {
+            try {
+                localStorage.removeItem(appearanceKey); appearance = null;
+                background.value = '#7c3aed'; foreground.value = '#ffffff';
+                paintAppearance(preview, null); paintAppearance(shadow.getElementById('toggle'), null);
+                appearanceStatus.textContent = 'Default button colours restored.';
+            } catch { appearanceStatus.textContent = 'Could not reset colours. Your saved colours have not changed.'; }
+        });
         const select = shadow.getElementById('crime');
         for (const name of Object.keys(crimeMinimums).sort((a,b)=>a.localeCompare(b))) {
             const option = document.createElement('option'); option.value = clean(name); option.textContent = name; select.appendChild(option);

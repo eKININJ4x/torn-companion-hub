@@ -35,7 +35,7 @@ Use the hub footer to report bugs or suggest features. Review and reproduce repo
 
 ## OC Requirement Display
 
-The hub card at `/#oc-requirements` installs the public userscript for Tampermonkey or Torn PDA. Version 3.3.0 adds a compact settings panel on Torn with crime-wide and role-specific target overrides saved locally between reloads and script updates. The userscript and metadata-only file are hosted under `public/scripts/tc-oc-requirements.*.js`. The update URLs point to these files on the repository's main branch. No API key is required.
+The hub card at `/#oc-requirements` installs the public userscript for Tampermonkey or Torn PDA. Version 3.4.0 adds a compact settings panel on Torn with crime-wide and role-specific target overrides saved locally between reloads and script updates. The userscript and metadata-only file are hosted under `public/scripts/tc-oc-requirements.*.js`. The update URLs point to these files on the repository's main branch. No API key is required.
 
 The catalogue covers 33 crimes. Existing custom targets remain; newly added crimes default to 60. These are faction targets, not official Torn minimums. Change the version in both files together for future releases. Desktop and PDA installation, duplicate-script handling and manual-copy fallback are documented on the card.
 
@@ -46,3 +46,7 @@ Open **TC · OC minimums** on Torn's faction crime page. Choose a crime, set an 
 Settings are stored under the version-independent `tc.ocRequirementTargets.v1` key in Torn's local browser storage. They survive script updates and are separate for each browser/device and Torn origin. Clearing site data removes them. Storage and validation failures are shown in the panel. The script makes no API or network requests.
 
 The hub groups scripts above webpages, uses distinct SVG artwork for each userscript and consistent desktop/PDA install buttons. Market Watcher is marked Live following user verification.
+
+### Custom button colours
+
+OC Requirement Display v3.4.0 uses the same Arial button font as TC OC, including mobile sizing. Both scripts offer independent background/text colour pickers, preview, Save and Reset controls. Open **TC · OC minimums → Button colours** or **TC OC → Settings → Button colours**. Preferences persist through updates. Requirements colour preferences use `tc.ocRequirementAppearance.v1`; TC OC v1.0.4 uses `tc_oc_button_appearance_v1` through its existing script/browser storage helper. Targets and API keys use separate keys and are preserved.
