@@ -56,3 +56,7 @@ OC Requirement Display v3.4.0 uses the same Arial button font as TC OC, includin
 OC Requirement Display v3.5.0 and TC OC v1.1.0 add dedicated dotted drag handles. Mouse and touch dragging only operate on the handles; clicking the main button still opens its panel. Handle focus supports arrow keys (2px) and Shift+arrow (10px). Positions are saved after a completed drag or keyboard move, and cancelled drags restore the previous position.
 
 Saved positions use versioned, normalised coordinates, with an 8px viewport margin. They adapt to viewport changes; settings panels follow the relevant launcher and are clamped within the viewport. **Reset position** appears in each script's settings. Position storage is separate from target, colour and API settings: `tc.ocRequirementPosition.v1` for Requirements and `tc_oc_button_position_v1` for TC OC. The original defaults remain for users without a saved position.
+
+### Menu readability and Market Watcher banner
+
+Requirements v3.5.1 fixes the host reset that caused black labels and serif text. Both script panels use explicit Arial text, high-contrast foreground/muted colours, matching dark surfaces, header typography, borders and buttons. The Requirements panel now has a fixed header with a separately scrolling body. TC OC v1.1.1 scopes label and control text styles against Torn's page CSS. Saved positions, colours, targets and API keys are unchanged. Market Watcher now has matching SVG banner artwork on its hub card and tool page.

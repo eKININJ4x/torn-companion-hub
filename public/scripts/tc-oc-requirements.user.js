@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn OC Requirement Display
 // @namespace    torn-companion
-// @version      3.5.0
+// @version      3.5.1
 // @author       Torn Companion
 // @homepageURL  https://github.com/eKININJ4x/torn-companion-hub
 // @updateURL    https://raw.githubusercontent.com/eKININJ4x/torn-companion-hub/main/public/scripts/tc-oc-requirements.meta.js
@@ -562,30 +562,35 @@
     function makeSettings() {
         if (root?.isConnected) return;
         root = document.createElement('div'); root.id = rootId;
-        root.style.cssText = 'all:initial;position:fixed;right:12px;bottom:80px;bottom:calc(80px + env(safe-area-inset-bottom, 0px));z-index:99999;';
+        root.style.cssText = 'all:initial;font:14px/1.45 Arial,sans-serif;color:#edf3fa;position:fixed;right:12px;bottom:80px;bottom:calc(80px + env(safe-area-inset-bottom, 0px));z-index:99999;';
         shadow = root.attachShadow({ mode: 'open' });
         shadow.innerHTML = `
         <style>
-          :host{color-scheme:dark;font:14px/1.5 Arial,sans-serif;color:#f4efff}
-          *{box-sizing:border-box} [hidden]{display:none!important}
-          button,input,select{font:inherit}button{cursor:pointer}
-          button{border:1px solid #66527f;border-radius:9px;padding:9px 12px;background:#261c37;color:#f4efff}
-          button:hover{background:#3b2855}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #c699ff;outline-offset:2px}
-          #toggle{font:700 14px/1.2 Arial,sans-serif;display:block;margin-left:auto;background:#6522a8;box-shadow:0 4px 18px #0005;font-weight:700}
-          #panel{position:fixed;width:min(390px,calc(100vw - 24px));max-height:min(640px,calc(100dvh - 24px));overflow:auto;margin:0;padding:18px;border:1px solid #71528c;border-radius:14px;background:#11101c;box-shadow:0 12px 44px #0008}
-          .top{display:flex;align-items:center;justify-content:space-between;gap:8px}h2{font-size:18px;margin:0}p{color:#c3b6d4;font-size:12px;margin:8px 0 15px}.close{font-size:18px;padding:2px 9px}
-          label{display:block;font-weight:600}select,input{border:1px solid #68577d;border-radius:8px;background:#1b1529;color:#f4efff;padding:9px;width:100%;margin-top:6px}input{min-width:0}
-          .crime-default{margin:16px 0}small{display:block;font-size:11px;color:#b5a5c8;font-weight:400}
-          #roles{border-top:1px solid #3c304c}.role{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #30263e;font-size:13px}.role input{width:84px;margin:0;flex-shrink:0}input::placeholder{color:#aaa0b9;opacity:1}
-          .actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:16px}.primary{background:#7227bf;border-color:#a872e0;font-weight:700}#status{margin:12px 0 0;min-height:18px;color:#dcc4ff}
-          #launcher{display:flex;align-items:center;justify-content:flex-end;gap:6px}.drag-handle{cursor:grab;touch-action:none;user-select:none;font:700 20px/1 Arial,sans-serif;padding:9px 7px}
+          :host{color-scheme:dark;font:14px/1.45 Arial,sans-serif;color:#edf3fa}
+          *,*::before,*::after{box-sizing:border-box}[hidden]{display:none!important}
+          #panel{position:fixed;width:min(430px,calc(100vw - 24px));max-height:72vh;display:flex;flex-direction:column;overflow:hidden;margin:0;padding:0;border:1px solid #2b3b51;border-radius:16px;background:#101722;color:#edf3fa;font:14px/1.45 Arial,sans-serif;box-shadow:0 18px 60px #0008}
+          .tc-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid #253246;flex:0 0 auto}
+          h2{margin:0;color:#edf3fa;font:800 16px/1.35 Arial,sans-serif}.tc-sub{color:#c1ccd9;font:400 12px/1.5 Arial,sans-serif;margin-top:3px}
+          .tc-body{padding:14px 16px;overflow:auto;max-height:calc(72vh - 78px);min-height:0;-webkit-overflow-scrolling:touch}
+          p{color:#c1ccd9;font:400 13px/1.5 Arial,sans-serif;margin:8px 0 15px}label{display:block;color:#edf3fa;font:700 14px/1.45 Arial,sans-serif}small{display:block;color:#c1ccd9;font:400 12px/1.5 Arial,sans-serif}
+          button,input,select,textarea{font:400 14px/1.4 Arial,sans-serif;color:#edf3fa}button{cursor:pointer;border:1px solid #35445b;border-radius:9px;padding:8px 10px;background:#172334;color:#edf3fa;font-weight:700}
+          button:hover{background:#23344c}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid #c699ff;outline-offset:2px}
+          input,select{display:block;width:100%;border:1px solid #52647d;border-radius:9px;background:#0b111a;color:#edf3fa;padding:10px;margin-top:6px;min-width:0}select option{background:#0b111a;color:#edf3fa}input::placeholder{color:#b3c0d0;opacity:1}
+          .close{border:0;background:transparent;color:#c1ccd9;font:400 24px/1 Arial,sans-serif;padding:2px 6px}.close:hover{background:#23344c;color:#fff}
+          .crime-default{margin:16px 0}#roles{border-top:1px solid #253246}.role{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #253246}.role span{color:#edf3fa}.role input{width:84px;margin:0;flex-shrink:0}
+          .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.primary{background:#6d28d9;border-color:#8b5cf6;color:#fff;font-weight:700}.primary:hover{background:#7c3aed}
+          #status,#appearance-status,#position-status{margin:12px 0 0;color:#e1d0ff;font:400 13px/1.5 Arial,sans-serif;min-height:18px}
+          .tc-section{margin-top:16px;padding-top:14px;border-top:1px solid #253246}.tc-section summary{cursor:pointer;color:#edf3fa;font:700 14px/1.5 Arial,sans-serif;padding:10px 12px;border:1px solid #35445b;border-radius:9px;background:#172334}.tc-section[open] summary{margin-bottom:12px}
           .colour-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}input[type="color"]{height:42px;padding:4px}.preview{display:inline-block;border-radius:999px;padding:10px 13px;font:700 14px/1.2 Arial,sans-serif}
-          @media(max-width:700px){#toggle{font-size:clamp(11px,3vw,13px)}}
-          @media(max-width:400px){#panel{padding:14px}.actions button{flex:1 1 auto}}
+          #launcher{display:flex;align-items:center;justify-content:flex-end;gap:6px}#toggle{font:700 14px/1.2 Arial,sans-serif;display:block;margin-left:auto;background:#6522a8;box-shadow:0 4px 18px #0005}
+          .drag-handle{cursor:grab;touch-action:none;user-select:none;font:700 20px/1 Arial,sans-serif;padding:9px 7px;background:#21182e;color:#e4d4f4;border-color:#72528c}
+          @media(max-width:700px){#toggle{font-size:clamp(11px,3vw,13px)}#panel{max-height:min(58dvh,520px);border-radius:12px}.tc-head{padding:10px 12px}h2{font-size:15px}.tc-body{padding:12px;max-height:calc(min(58dvh,520px) - 78px)}}
+          @media(max-width:400px){.actions button{flex:1 1 auto}}
           @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
         </style>
         <section id="panel" role="dialog" aria-labelledby="heading" hidden>
-          <div class="top"><h2 id="heading">OC minimums</h2><button type="button" class="close" id="close" aria-label="Close settings">×</button></div>
+          <div class="tc-head"><div><h2 id="heading">Torn Companion · OC Minimums</h2><div class="tc-sub">Build 3.5.1 · OC 2.0 role targets</div></div><button type="button" class="close" id="close" aria-label="Close settings">×</button></div>
+          <div class="tc-body">
           <p>Set your faction’s targets for this browser. Saved choices survive script updates. These are not official Torn requirements.</p>
           <form id="targets-form">
             <label for="crime">Crime</label><select id="crime"></select>
@@ -595,8 +600,8 @@
             <div class="actions"><button class="primary" type="submit">Save targets</button><button type="button" id="reset-crime">Reset this crime</button><button type="button" id="reset-all">Reset all</button></div>
           </form>
           <p id="status" role="status" aria-live="polite"></p>
-          <details style="border-top:1px solid #3c304c;margin-top:16px;padding-top:12px">
-            <summary style="cursor:pointer;font-weight:700">Button colours</summary>
+          <details class="tc-section">
+            <summary>Button colours</summary>
             <p>Choose background and text colours for your OC minimums button. Saved choices survive script updates in this browser.</p>
             <form id="appearance-form">
               <div class="colour-grid">
@@ -608,12 +613,13 @@
               <p id="appearance-status" role="status" aria-live="polite"></p>
             </form>
           </details>
-          <details style="border-top:1px solid #3c304c;margin-top:16px;padding-top:12px">
-            <summary style="cursor:pointer;font-weight:700">Button position</summary>
+          <details class="tc-section">
+            <summary>Button position</summary>
             <p>Drag the dotted handle beside the button with a mouse or finger. With the handle focused, arrow keys move it; hold Shift for larger steps. Position is saved for this browser and adapts to screen size.</p>
             <button type="button" id="reset-position">Reset position</button>
             <p id="position-status" role="status" aria-live="polite"></p>
           </details>
+          </div>
         </section>
         <div id="launcher"><button id="toggle" type="button" aria-expanded="false" aria-controls="panel">TC · OC minimums</button><button id="drag-handle" class="drag-handle" type="button" aria-label="Move OC minimums button" title="Drag to move. Arrow keys move; Shift moves faster.">⠿</button></div>`;
         const background = shadow.getElementById('button-background');
