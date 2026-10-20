@@ -124,7 +124,7 @@
       .card{min-height:auto}
     }
   </style>
-<script src="/shared-api.js" defer></script><link rel="stylesheet" href="/companion.css"><script src="/pda-install.js" defer></script></head>
+<script src="/shared-api.js" defer></script><link rel="stylesheet" href="/companion.css"><script src="/pda-install.js" defer></script><script src="/oc-requirements-install.js" defer></script></head>
 <body class="tc-page tc-hub" data-page="hub">
 <header><div class="tc-navbar"><div class="tc-nav-top"><a class="tc-nav-brand" href="/"><span class="tc-nav-mark">TC</span><span>Torn Companion</span></a><nav class="tc-mainnav" aria-label="Torn Companion tools"><a href="/" aria-current="page">Hub</a><a href="/education/">Education</a><a href="/armoury/">Armoury</a><a href="/payouts/">War Payouts</a><a href="/#install">TC OC</a></nav></div></div></header>
 
@@ -232,6 +232,44 @@
 <div class="meta"><span class="pill">Favourites</span><span class="pill">All items</span><span class="pill">Price alerts</span><span class="pill">Testing</span></div>
 <div class="card-actions"><a class="btn primary" href="/market/">Open Market Watcher</a></div>
 </article>
+
+          <article class="card" id="oc-requirements">
+            <img class="tool-art" src="/assets/hub-banner.webp" alt="" loading="lazy" decoding="async" width="1200" height="400">
+            <div class="card-top">
+              <div class="icon" aria-hidden="true">📊</div>
+              <span class="status"><span class="dot"></span>Live</span>
+            </div>
+            <h3>OC Requirement Display</h3>
+            <p>See each role’s current CPR beside its configured minimum, such as <strong>84/60</strong>. Targets stay visible on occupied and empty OC 2.0 slots, whoever joins.</p>
+            <div class="meta">
+              <span class="pill">v3.2.2</span><span class="pill">33 crimes</span><span class="pill">Tampermonkey</span><span class="pill">Torn PDA</span><span class="pill">No API key</span><span class="pill">Auto updates</span>
+            </div>
+            <p style="font-size:13px">The minimums are configurable faction targets. Crimes without a custom target use 60; these are not official Torn entry requirements or guaranteed success rates.</p>
+            <div class="card-actions">
+              <a class="btn primary" href="https://raw.githubusercontent.com/eKININJ4x/torn-companion-hub/main/public/scripts/tc-oc-requirements.user.js">Install for Tampermonkey</a>
+              <a class="btn ghost" href="/scripts/tc-oc-requirements.user.js">Install in Torn PDA</a>
+            </div>
+            <details style="margin-top:18px">
+              <summary style="cursor:pointer;font-weight:800;color:#d8b4fe">Installation &amp; updates</summary>
+              <h4>Desktop / Tampermonkey</h4>
+              <ol style="padding-left:20px;color:var(--muted);line-height:1.7">
+                <li>With Tampermonkey installed and enabled, select <strong>Install for Tampermonkey</strong> and confirm the installation screen.</li>
+                <li>If you tested an earlier copy, replace or disable that copy so only one OC Requirement Display script is enabled.</li>
+                <li>Refresh Torn’s Faction → Organised Crimes page. Role values should now appear as current/minimum.</li>
+              </ol>
+              <h4>Torn PDA</h4>
+              <ol style="padding-left:20px;color:var(--muted);line-height:1.7">
+                <li>Enable custom user scripts in Torn PDA’s browser settings.</li>
+                <li>Open this hub inside Torn PDA’s built-in browser, tap <strong>Install in Torn PDA</strong>, then confirm and enable the script.</li>
+                <li>If no installation prompt appears, use <strong>Copy script</strong> below. Open Torn PDA’s Manage scripts / Userscripts, add a script, paste the complete code and save. Use End injection if requested.</li>
+                <li>Reload Torn’s Faction → Organised Crimes page inside Torn PDA. No API key is needed.</li>
+              </ol>
+              <p style="font-size:13px">This published version includes update and download links. Tampermonkey can check for updates automatically when enabled; in Torn PDA, use its script update/check control if available, or reinstall from this card. Manually pasted earlier test builds need this version installed once to receive the update links.</p>
+              <button class="btn" type="button" id="tcCopyOcRequirements">Copy script</button>
+              <p id="tcOcRequirementsCopyStatus" role="status" aria-live="polite" style="font-size:13px;color:var(--muted)"></p>
+              <textarea id="tcOcRequirementsScriptText" hidden readonly aria-label="OC Requirement Display script to copy" style="width:100%;min-height:160px"></textarea>
+            </details>
+          </article>
 
           <article class="card wide">
             <div class="card-top">

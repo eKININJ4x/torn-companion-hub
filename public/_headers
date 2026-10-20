@@ -2,3 +2,13 @@
   Content-Type: text/javascript; charset=utf-8
   Cache-Control: no-cache
   X-Content-Type-Options: nosniff
+
+/scripts/tc-oc-requirements.user.js
+  Content-Type: text/javascript; charset=utf-8
+  Cache-Control: no-cache
+  X-Content-Type-Options: nosniff
+
+/scripts/tc-oc-requirements.meta.js
+  Content-Type: text/javascript; charset=utf-8
+  Cache-Control: no-cache
+  X-Content-Type-Options: nosniff
