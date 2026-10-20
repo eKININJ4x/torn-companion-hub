@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn OC Requirement Display
 // @namespace    torn-companion
-// @version      3.3.0
+// @version      3.3.1
 // @author       Torn Companion
 // @homepageURL  https://github.com/eKININJ4x/torn-companion-hub
 // @updateURL    https://raw.githubusercontent.com/eKININJ4x/torn-companion-hub/main/public/scripts/tc-oc-requirements.meta.js
@@ -409,7 +409,7 @@
     function makeSettings() {
         if (root?.isConnected) return;
         root = document.createElement('div'); root.id = rootId;
-        root.style.cssText = 'all:initial;position:fixed;right:12px;bottom:12px;z-index:99999;';
+        root.style.cssText = 'all:initial;position:fixed;right:12px;bottom:80px;bottom:calc(80px + env(safe-area-inset-bottom, 0px));z-index:99999;';
         shadow = root.attachShadow({ mode: 'open' });
         shadow.innerHTML = `
         <style>
@@ -419,7 +419,7 @@
           button{border:1px solid #66527f;border-radius:9px;padding:9px 12px;background:#261c37;color:#f4efff}
           button:hover{background:#3b2855}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #c699ff;outline-offset:2px}
           #toggle{display:block;margin-left:auto;background:#6522a8;box-shadow:0 4px 18px #0005;font-weight:700}
-          #panel{width:min(390px,calc(100vw - 24px));max-height:min(640px,calc(100dvh - 80px));overflow:auto;margin-bottom:8px;padding:18px;border:1px solid #71528c;border-radius:14px;background:#11101c;box-shadow:0 12px 44px #0008}
+          #panel{width:min(390px,calc(100vw - 24px));max-height:min(640px,calc(100dvh - 160px - env(safe-area-inset-bottom, 0px)));overflow:auto;margin-bottom:8px;padding:18px;border:1px solid #71528c;border-radius:14px;background:#11101c;box-shadow:0 12px 44px #0008}
           .top{display:flex;align-items:center;justify-content:space-between;gap:8px}h2{font-size:18px;margin:0}p{color:#c3b6d4;font-size:12px;margin:8px 0 15px}.close{font-size:18px;padding:2px 9px}
           label{display:block;font-weight:600}select,input{border:1px solid #68577d;border-radius:8px;background:#1b1529;color:#f4efff;padding:9px;width:100%;margin-top:6px}input{min-width:0}
           .crime-default{margin:16px 0}small{display:block;font-size:11px;color:#b5a5c8;font-weight:400}
