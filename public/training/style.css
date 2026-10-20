@@ -18,3 +18,17 @@ input:invalid{border-color:#f87171;box-shadow:0 0 0 1px #f87171}
 /* Numeric fields accept typing without browser spinner arrows. */
 input[type=number]{appearance:textfield;-moz-appearance:textfield}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+/* Energy comparison retains the original side-by-side table layout. */
+#energy .table-wrap{overflow-x:auto}
+#energy .table-wrap table{display:table}
+#energy .table-wrap thead{position:static;width:auto;height:auto;overflow:visible;clip:auto;display:table-header-group}
+#energy .table-wrap tbody{display:table-row-group}
+#energy .table-wrap tr{display:table-row;padding:0;border:0;border-radius:0;background:transparent}
+#energy .table-wrap th,#energy .table-wrap td{padding:13px 12px;white-space:nowrap}
+#energy .table-wrap td{display:table-cell;text-align:right;overflow-wrap:normal}
+#energy .table-wrap td::before{content:none}
+#energy .table-wrap td:first-child{display:table-cell;text-align:left;font-size:13px;padding:13px 12px;margin:0}
+#energy .table-wrap td:last-child{border-bottom:1px solid var(--border)}
+#energy .table-wrap td input{width:130px!important;padding:8px}
+#energy .table-wrap td input[data-field=energy],#energy .table-wrap td input[data-field=hours]{width:90px!important}
+#energy .table-wrap small{margin-top:0;line-height:1.6}
