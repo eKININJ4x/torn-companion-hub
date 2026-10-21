@@ -182,7 +182,7 @@ html[data-theme="light"] .badge{color:#6d28d9;background:#f3e8ff;border-color:#d
 <div><label for="prize">Total Prize Value ($) — editable override</label><input id="prize" type="number" inputmode="numeric" min="0" step="1" placeholder="Enter total prize value"></div>
 <div><label for="cut">Faction Cut (%)</label><input id="cut" type="number" inputmode="decimal" min="0" max="100" step="0.1" placeholder="Enter faction cut">
 <label style="margin-top:9px;display:flex;align-items:center;gap:8px;color:var(--muted)"><input id="rememberCut" type="checkbox" style="width:auto" onchange="saveCutPreference()"> Remember faction cut on this device</label></div>
-<div><label>Successful War Hits</label><input id="hits" type="number" inputmode="numeric" placeholder="Loaded from API" readonly></div>
+<div><label>Reported War Hits</label><input id="hits" type="number" inputmode="numeric" placeholder="Loaded from API" readonly></div>
 </div>
 <div class="actions"><button type="button" onclick="calculate()">Calculate Payouts</button><button class="secondary" type="button" onclick="clearAll()">Reset / Clear</button></div>
 </section>
@@ -202,11 +202,11 @@ html[data-theme="light"] .badge{color:#6d28d9;background:#f3e8ff;border-color:#d
 
 <section class="card">
 <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
-<div><h2 style="margin-bottom:4px">Member Payouts</h2><div class="muted">Original successful war hits stay visible. Exclude hits outside agreed terms; payouts use the remaining eligible hits.</div></div>
+<div><h2 style="margin-bottom:4px">Member Payouts</h2><div class="muted">Original attack totals from Torn’s ranked-war report stay visible. Exclude hits outside agreed terms; payouts use the remaining eligible hits.</div></div>
 <div class="actions" style="margin-top:0"><button type="button" onclick="openFactionBank()">Open Faction Bank</button><button type="button" onclick="openNextFactionPayout()">Pay Next</button><button class="secondary" onclick="copyPayouts()">Copy Payouts</button>
 <label style="display:flex;align-items:center;gap:7px;font-size:.86rem;font-weight:700;cursor:pointer"><input id="autoMarkPaid" type="checkbox" onchange="saveAutoMarkPaid()"> Automatically mark Paid when Pay is clicked</label><button class="secondary" onclick="exportCSV()">Export CSV</button></div>
 </div>
-<p class="muted" style="font-size:.85rem">Set <strong>Excluded hits</strong> to the number that should not be paid (use the full count to exclude a member entirely). Changes recalculate all payouts and are saved on this device for this War ID. Paid flags are cleared for members whose payout changes; check any transfers already made.</p><div class="actions"><button class="secondary" type="button" onclick="resetHitExclusions()">Restore all war hits</button></div><p id="hitAdjustmentStatus" class="muted" role="status"></p>
+<p class="muted" style="font-size:.85rem">Set <strong>Excluded hits</strong> to the number that should not be paid (use the full count to exclude a member entirely). Changes recalculate all payouts and are saved on this device for this War ID. Paid flags are cleared for members whose payout changes; check any transfers already made.</p><div class="actions"><button class="secondary" type="button" onclick="resetHitExclusions()">Restore all war hits</button></div><p id="hitSourceNotice" class="warn" role="status" hidden>Hit totals now come directly from Torn’s ranked-war report. Existing Paid checkmarks are preserved; review amounts already transferred before making further payments, as corrected counts can change everyone’s payout.</p><p id="hitAdjustmentStatus" class="muted" role="status"></p>
 <div class="table-wrap">
 <table>
 <thead><tr><th>Member</th><th>Torn ID</th><th class="num">Original hits</th><th class="num">Excluded hits</th><th class="num">Eligible hits</th><th class="num">Payout</th><th class="num">Bank</th><th class="num">Paid</th></tr></thead>
@@ -226,7 +226,7 @@ html[data-theme="light"] .badge{color:#6d28d9;background:#f3e8ff;border-color:#d
 <p class="muted" style="font-size:.85rem">Whole-dollar payouts use a largest-remainder allocation so the member payouts add up exactly to the whole-dollar member pool.</p>
 </section>
 
-<footer><strong>Torn Companion</strong> · Ranked War Payouts · V2.4.0<br><span class="muted">Not affiliated with Torn or Chedburn Networks.</span></footer>
+<footer><strong>Torn Companion</strong> · Ranked War Payouts · V2.4.1<br><span class="muted">Not affiliated with Torn or Chedburn Networks.</span></footer>
 </main>
 <script>
 let members = [
@@ -497,6 +497,22 @@ function extractWar(report,warId){
   return {war,factions,start,end,warId};
 }
 
+function rankedWarReportMembers(faction){
+  const raw=faction?.members;
+  if(!raw||typeof raw!=='object')throw new Error('The ranked-war report did not include member attack totals. No partial attack-log counts will be used.');
+  const list=Array.isArray(raw)?raw:Object.entries(raw).map(([id,m])=>({...m,id:m.id??Number(id)}));
+  const seen=new Set(),rows=[];
+  for(const member of list){
+    const id=Number(member.id),hits=Number(member.attacks);
+    if(!Number.isSafeInteger(id)||id<=0||member.attacks===null||member.attacks===undefined||!Number.isSafeInteger(hits)||hits<0||seen.has(id))throw new Error('The ranked-war report contained invalid or duplicate member attack totals. Please reload the report.');
+    seen.add(id);
+    if(hits>0)rows.push({id,name:member.name||('Former member ['+id+']'),hits});
+  }
+  const reported=faction.attacks;
+  if(reported!==undefined&&reported!==null&&Number(reported)!==rows.reduce((n,m)=>n+m.hits,0))throw new Error('Member attack totals do not match the faction total in Torn’s report. No payouts were recalculated; reload the report.');
+  return rows.sort((a,b)=>b.hits-a.hits||a.name.localeCompare(b.name));
+}
+
 function factionId(f){ return Number(f?.id ?? f?.faction_id ?? f?.faction?.id); }
 function factionName(f){ return f?.name ?? f?.faction_name ?? f?.faction?.name ?? ('Faction '+factionId(f)); }
 
@@ -626,69 +642,9 @@ async function loadWarFromAPI(){
     const ourId=factionId(ourFaction), opponentId=factionId(opponent);
     if(!ourId || !opponentId) throw new Error('Could not identify faction IDs from the report.');
 
-    out.textContent='War found. Loading outgoing attacks…';
-
-    // from is exclusive on this endpoint, so subtract one second to include the boundary.
-    const qs=new URLSearchParams({
-      filters:'outgoing', limit:'1000', sort:'ASC',
-      from:String(Math.max(0,info.start-1)), to:String(info.end)
-    });
-    const attackData=await tornFetch('/faction/attacksfull?'+qs.toString(),key);
-    const attacks=Array.isArray(attackData?.attacks)?attackData.attacks:[];
-    const valid=attacks.filter(a =>
-      Number(a?.attacker?.faction_id)===ourId &&
-      Number(a?.defender?.faction_id)===opponentId &&
-      Number(a?.respect_gain)>0
-    );
-
-    const counts=new Map();
-    for(const a of valid){
-      const id=Number(a?.attacker?.id);
-      if(id) counts.set(id,(counts.get(id)||0)+1);
-    }
-
-    // Build names from the historical attack records first. This preserves the
-    // player's name even if they have since left the faction.
-    let names=new Map();
-    for(const a of valid){
-      const id=Number(a?.attacker?.id);
-      const name=a?.attacker?.name ?? a?.attacker?.player_name;
-      if(id && name) names.set(id,name);
-    }
-
-    // Current faction membership can supplement any names missing from old attacks.
-    try{
-      const memberData=await tornFetch('/faction/'+ourId+'/members',key);
-      const arr=Array.isArray(memberData?.members)?memberData.members:Object.values(memberData?.members||{});
-      for(const m of arr){
-        const id=Number(m?.id ?? m?.player_id ?? m?.user_id);
-        const name=m?.name ?? m?.player_name;
-        if(id && name && !names.has(id)) names.set(id,name);
-      }
-    }catch(e){}
-
-    // For anyone who has since left the faction and still has no historical name,
-    // resolve the Torn ID individually. Limit concurrency to keep API usage gentle.
-    const unresolved=[...counts.keys()].filter(id=>!names.has(id));
-    if(unresolved.length){
-      out.textContent=`Resolving ${unresolved.length} former member name${unresolved.length===1?'':'s'}…`;
-      const resolveOne=async id=>{
-        try{
-          const u=await tornFetch('/user/'+id+'/basic',key);
-          // API v2 UserBasicResponse nests the user under "profile".
-          // Keep the older shapes too so the resolver is resilient.
-          const b=u?.profile ?? u?.basic ?? u?.user ?? u;
-          const name=b?.name ?? b?.player_name ?? b?.username;
-          if(name) names.set(id,name);
-        }catch(e){}
-      };
-      for(let i=0;i<unresolved.length;i+=3){
-        await Promise.all(unresolved.slice(i,i+3).map(resolveOne));
-      }
-    }
-
-    members=[...counts.entries()].map(([id,hits])=>({name:names.get(id)||('Former member ['+id+']'),id,hits}))
-      .sort((a,b)=>b.hits-a.hits || a.name.localeCompare(b.name));
+    // The ranked-war report is authoritative. A single attacksfull page is
+    // capped at 1,000 records and can undercount longer wars.
+    members=rankedWarReportMembers(ourFaction);
 
     const total=members.reduce((sum,m)=>sum+m.hits,0);
     document.getElementById('warId').value=warId;
@@ -697,11 +653,12 @@ async function loadWarFromAPI(){
     if(ws){ws.style.display='block';document.getElementById('sumWar').textContent='#'+warId;document.getElementById('sumOpponent').textContent=opponent.name||('Faction '+opponent.id);document.getElementById('sumHits').textContent=total;document.getElementById('sumRewards').textContent=rewards.length?rewards.map(r=>`${r.qty}× ${r.name}`).join(', '):'None';}
     renderScoreGraph(ourFaction,opponent,info.war);
     loadPaidState();
+    document.getElementById('hitSourceNotice').hidden=paidMembers.size===0;
     document.getElementById('hits').value=total;
     document.getElementById('apiWarId').value=warId;
     document.getElementById('status').textContent='Live API data loaded. Enter/check the prize value and faction cut, then calculate.';
     document.getElementById('status').className='good';
-    out.textContent=`Loaded ${factionName(ourFaction)} vs ${factionName(opponent)} — ${total} valid war hits from ${members.length} hit makers.`;
+    out.textContent=`Loaded ${factionName(ourFaction)} vs ${factionName(opponent)} — ${total} reported war attacks from ${members.length} hit makers (Torn ranked-war report).`;
     out.className='api-status good';
     calculate();
   }catch(err){
@@ -792,6 +749,7 @@ function openFactionBank(){
   window.open('https://www.torn.com/factions.php?step=your#/tab=controls','_blank','noopener');
 }
 function clearAll(){
+  document.getElementById('hitSourceNotice').hidden=true;
   hitExclusions={};document.getElementById('hitAdjustmentStatus').textContent='';document.getElementById('originalTableHits').textContent='0';document.getElementById('excludedTableHits').textContent='0';
   members=[];
   lastRows=[];
